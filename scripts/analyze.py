@@ -39,8 +39,10 @@ CASE_ZH = {"pacs": "PACS（自然图像）", "organ": "OrganMNIST（腹部CT）"
 GRAYS = ["#000000", "#666666", "#AAAAAA", "#DDDDDD"]
 MARKERS = ["o", "s", "^", "v"]
 TAG_LABEL = {"": "lr=3e-4", "_strong": "lr=1e-3", "_lr1e4": "lr=1e-4"}
-# 主序列：正文的全部数字都来自这一组（backbone/size 对照实验由 robustness_check.py 单独分析）
-MAIN_BACKBONE, MAIN_SIZE = "resnet18", 128
+# 主序列：正文的全部数字都来自这一组（主干=ResNet-18，尺寸为各案例的主尺寸）
+# 对照实验（ResNet-18@224 / ViT-B/16@224）由 robustness_check.py 单独分析
+MAIN_BACKBONE = "resnet18"
+MAIN_SIZE = {"pacs": 128, "organ": 64, "digits": 64}
 
 
 def load():
@@ -59,9 +61,14 @@ def load():
     df["tag"] = df["file"].str.extract(r"_s\d+(?P<tag>.*)$")["tag"]
     # 只保留主序列，避免架构/分辨率对照实验混入论文数字
     _n0 = len(df)
-    df = df[(df["backbone"] == MAIN_BACKBONE) & (df["size"] == MAIN_SIZE)].copy()
+    df["_main_size"] = df["case"].map(MAIN_SIZE)
+    df = df[(df["backbone"] == MAIN_BACKBONE) & (df["size"] == df["_main_size"])].drop(
+        columns=["_main_size"]).copy()
     if len(df) != _n0:
         print("  跳过非主序列结果 %d 行（backbone/size 对照实验）" % (_n0 - len(df)))
+    _missing = [c for c in MAIN_SIZE if c not in set(df["case"])]
+    if _missing:
+        raise SystemExit("主序列缺少案例 %s：请检查结果文件是否齐全" % _missing)
     for col in ("case", "backbone", "size", "tag", "domain", "role"):
         df[col] = df[col].fillna("").astype(str)
     return df

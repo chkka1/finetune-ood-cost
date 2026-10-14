@@ -38,6 +38,14 @@ def is_in(raw_dom):
     return "域内" in raw_dom
 
 
+MAIN_SIZE = {"pacs": 128, "organ": 64, "digits": 64}   # 主序列尺寸；对照实验（224/ViT）另行分析
+
+
+def is_main(row) -> bool:
+    """只保留主序列（ResNet-18 + 各案例主尺寸），避免对照实验混入论文数字。"""
+    return row.get("backbone") == "resnet18" and int(row.get("size", -1)) == MAIN_SIZE.get(row["case"], -1)
+
+
 def load():
     """返回 raw[(case, tag, seed, domain)][epoch] = 该轮记录。"""
     raw = defaultdict(dict)
@@ -48,6 +56,9 @@ def load():
         case = p.name.split("_")[0]
         with p.open(encoding="utf-8") as f:
             for row in csv_rows(f):
+                row["case"] = case
+                if not is_main(row):
+                    continue
                 key = (case, tag, int(row["seed"]), row["domain"])
                 raw[key][int(row["epoch"])] = row
     return raw

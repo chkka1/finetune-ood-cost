@@ -26,6 +26,14 @@ TAG_FROM_NAME = re.compile(r"_s\d+(?P<tag>.*)$")
 CASES = ("pacs", "organ", "digits")
 
 
+MAIN_SIZE = {"pacs": 128, "organ": 64, "digits": 64}   # 主序列尺寸；对照实验（224/ViT）另行分析
+
+
+def is_main(row) -> bool:
+    """只保留主序列（ResNet-18 + 各案例主尺寸），避免对照实验混入论文数字。"""
+    return row.get("backbone") == "resnet18" and int(row.get("size", -1)) == MAIN_SIZE.get(row["case"], -1)
+
+
 def load():
     rows = []
     for p in sorted(RESULTS.glob("*.csv")):
@@ -36,6 +44,8 @@ def load():
         with p.open(encoding="utf-8") as f:
             for r in csv.DictReader(f):
                 r["case"], r["tag"] = case, tag
+                if not is_main(r):
+                    continue
                 rows.append(r)
     base = {}
     for r in rows:
