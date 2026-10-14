@@ -96,6 +96,12 @@ def main():
             b, se, r2 = ols(y, x)
             return float(b[1]), float(b[1] / se[1]), float(r2), len(pts)
         slope, t, r2, n_all = fit(lambda v: True)                 # 全部 ≤ EPOCH 轮
+        ci = None
+        if slope is not None and t:
+            from scipy import stats as _st
+            se_ = abs(slope / t)
+            crit = float(_st.t.ppf(0.975, max(n_all - 2, 1)))
+            ci = [round(slope - crit * se_, 2), round(slope + crit * se_, 2)]
         sfin, tfin, r2fin, n_fin = fit(lambda v: v["final"])      # 仅末轮
         cfg = {"in_domain": round(ins, 2) if ins is not None else None,
                "out_domains": {d: round(v, 2) for d, v in outs.items()},
@@ -106,6 +112,7 @@ def main():
                "n_out_points": n_all,
                "slope_final": round(sfin, 3) if sfin is not None else None,
                "r2_final": round(r2fin, 3) if r2fin is not None else None,
+               "ci95": ci,
                "n_final_points": n_fin,
                "n_seeds": len({sd for sd, _, _ in data})}
         out["configs"][label] = cfg
@@ -114,6 +121,16 @@ def main():
             cfg["out_domains"].get("cartoon", float("nan")), cfg["out_domains"].get("sketch", float("nan")),
             cfg["out_mean"], cfg["slope"] if cfg["slope"] is not None else float("nan"),
             cfg["r2"] if cfg["r2"] is not None else float("nan")))
+    _a, _b = out["configs"].get("ResNet-18@128", {}), out["configs"].get("ResNet-18@224", {})
+    if _a.get("slope") is not None and _b.get("slope") is not None:
+        d = _b["slope"] - _a["slope"]
+        se_d = float(np.hypot(abs(_a["slope"] / _a["slope_t"]), abs(_b["slope"] / _b["slope_t"])))
+        from scipy import stats as _st
+        se_d = float(np.hypot(abs(_a["slope"] / _a["slope_t"]), abs(_b["slope"] / _b["slope_t"])))
+        out["slope_diff_128_vs_224"] = {"diff": round(d, 2),
+                                        "ci95": [round(d - 1.96 * se_d, 2), round(d + 1.96 * se_d, 2)]}
+        print("  两组 ResNet-18 斜率之差 %+.2f，95%%CI [%+.2f, %+.2f]" % (
+            d, d - 1.96 * se_d, d + 1.96 * se_d))
     (RESULTS / "robustness.json").write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
     print("\n已写出:", RESULTS / "robustness.json")
 

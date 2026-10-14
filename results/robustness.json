@@ -20,6 +20,10 @@
       "n_out_points": 45,
       "slope_final": -0.682,
       "r2_final": 0.465,
+      "ci95": [
+        -0.89,
+        -0.43
+      ],
       "n_final_points": 9,
       "n_seeds": 3
     },
@@ -37,6 +41,10 @@
       "n_out_points": 45,
       "slope_final": 0.81,
       "r2_final": 0.657,
+      "ci95": [
+        0.38,
+        0.86
+      ],
       "n_final_points": 9,
       "n_seeds": 3
     },
@@ -54,8 +62,19 @@
       "n_out_points": 45,
       "slope_final": 0.062,
       "r2_final": 0.004,
+      "ci95": [
+        -0.44,
+        0.17
+      ],
       "n_final_points": 9,
       "n_seeds": 3
     }
+  },
+  "slope_diff_128_vs_224": {
+    "diff": 1.28,
+    "ci95": [
+      0.95,
+      1.61
+    ]
   }
 }
