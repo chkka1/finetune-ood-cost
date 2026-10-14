@@ -28,28 +28,36 @@ function Invoke-Step([string]$label, [string[]]$argv) {
 }
 
 if ($Full) {
-    Invoke-Step "1/8 下载并缓存三个案例（约 3 GB）" @("$root\scripts\prepare_data.py", "all")
-    Invoke-Step "2/8 统计案例构成" @("$root\scripts\dataset_stats.py")
-    Invoke-Step "3/8 PACS 弱微调（lr=3e-4，40 轮，与强微调同预算）" @("$root\scripts\run_experiment.py",
+    Invoke-Step "1/10 下载并缓存三个案例（约 3 GB）" @("$root\scripts\prepare_data.py", "all")
+    Invoke-Step "2/10 统计案例构成" @("$root\scripts\dataset_stats.py")
+    Invoke-Step "3/10 PACS 弱微调（lr=3e-4，40 轮，与强微调同预算）" @("$root\scripts\run_experiment.py",
         "--case", "pacs", "--size", "128", "--epochs", "40",
         "--eval-epochs", "1", "2", "4", "8", "16", "24", "32", "40",
         "--seeds", "0", "1", "2", "--lr", "3e-4")
-    Invoke-Step "4/8 PACS 强微调（lr=1e-3，40 轮）" @("$root\scripts\run_experiment.py",
+    Invoke-Step "4/10 PACS 强微调（lr=1e-3，40 轮）" @("$root\scripts\run_experiment.py",
         "--case", "pacs", "--size", "128", "--epochs", "40",
         "--eval-epochs", "1", "2", "4", "8", "16", "24", "32", "40",
         "--seeds", "0", "1", "2", "--lr", "1e-3", "--tag", "_strong")
-    Invoke-Step "5/8 OrganMNIST 弱微调（24 轮，与强微调同预算）" @("$root\scripts\run_experiment.py",
+    Invoke-Step "5/10 OrganMNIST 弱微调（24 轮，与强微调同预算）" @("$root\scripts\run_experiment.py",
         "--case", "organ", "--size", "64", "--epochs", "24",
         "--eval-epochs", "1", "2", "4", "8", "16", "24", "--seeds", "0", "1", "2",
         "--batch", "128", "--lr", "3e-4", "--max-train", "12000")
-    Invoke-Step "6/8 OrganMNIST 强微调（24 轮）" @("$root\scripts\run_experiment.py",
+    Invoke-Step "6/10 OrganMNIST 强微调（24 轮）" @("$root\scripts\run_experiment.py",
         "--case", "organ", "--size", "64", "--epochs", "24",
         "--eval-epochs", "1", "2", "4", "8", "16", "24", "--seeds", "0", "1", "2",
         "--batch", "128", "--lr", "1e-3", "--max-train", "12000", "--tag", "_strong")
-    Invoke-Step "7/8 Digits 弱微调（16 轮）" @("$root\scripts\run_experiment.py",
+    Invoke-Step "7/10 Digits 弱微调（16 轮）" @("$root\scripts\run_experiment.py",
         "--case", "digits", "--size", "64", "--epochs", "16",
         "--eval-epochs", "1", "2", "4", "8", "16", "--seeds", "0", "1", "2",
         "--batch", "128", "--lr", "3e-4", "--max-train", "12000")
+    Invoke-Step "8/10 PACS 更弱微调（lr=1e-4，40 轮）" @("$root\scripts\run_experiment.py",
+        "--case", "pacs", "--size", "128", "--epochs", "40",
+        "--eval-epochs", "1", "2", "4", "8", "16", "24", "32", "40",
+        "--seeds", "0", "1", "2", "--lr", "1e-4", "--tag", "_lr1e4")
+    Invoke-Step "9/10 OrganMNIST 更弱微调（lr=1e-4，24 轮）" @("$root\scripts\run_experiment.py",
+        "--case", "organ", "--size", "64", "--epochs", "24",
+        "--eval-epochs", "1", "2", "4", "8", "16", "24", "--seeds", "0", "1", "2",
+        "--batch", "128", "--lr", "1e-4", "--max-train", "12000", "--tag", "_lr1e4")
 } else {
     Write-Host "快速模式：使用已提交的 results/ 离线重算（不下载数据、不训练）" -ForegroundColor Yellow
 }

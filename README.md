@@ -5,8 +5,8 @@
 - 同一批类别（域内域外共享标签空间）；
 - 同一个评估分类器（都在源域训练集特征上重新拟合，微调后丢弃训练头）；
 - 同一批随机种子 + 逐轮记录 → 剂量-反应曲线；
-- 两种微调强度（lr=3e-4 / 1e-3）使用**完全相同的轮数预算**（PACS 40 轮、OrganMNIST 24 轮），
-  排除训练时长这一混杂因素，使强度对比干净。
+- 三档微调强度（lr=1e-4 / 3e-4 / 1e-3）使用**完全相同的轮数预算**（PACS 40 轮、OrganMNIST 24 轮），
+  排除训练时长这一混杂因素，使“强度”可以单独作为自变量考察（数字案例只跑了 3e-4 一档）。
 
 这样设计的目的，是让**域内增益与域外代价在同一量纲下可比**，避免"两侧在不同类别集/不同协议上
 测得"导致的口径问题。三个公开案例：PACS（7 类 × 4 风格）、MedMNIST 器官数据（11 类 × 3 成像平面）、
@@ -26,9 +26,9 @@
 │   ├── dataset_stats.py    统计案例构成 → results/dataset_stats.json
 │   ├── run_experiment.py   核心：微调 + 逐轮跨域评估 + 特征距离诊断
 │   ├── analyze.py          汇总与统计检验 → results/analysis.json + analysis_summary.md
-│   └── plot_figures.py     按期刊规范出图（图 1~图 4；PNG 600 dpi + PDF 矢量 + TIFF）
+│   └── plot_figures.py     按期刊规范出图（图 1~图 6；PNG 600 dpi + PDF 矢量 + TIFF）
 ├── results/                已提交的真实实验结果（CSV/JSON，约 70 KB）
-├── figures/                四张结果图（fig1~fig4）+ 数据抽样确认图
+├── figures/                六张结果图（fig1~fig6）+ 数据抽样确认图
 ├── data/cases/             空目录：npz 案例缓存（约 480 MB，需生成，不随仓库分发）
 ├── requirements.txt
 ├── reproduce.ps1           一键复现
@@ -65,9 +65,11 @@ CPU 也能跑完整流程，只是实验部分会慢很多。
 产出：
 - `results/analysis_summary.md`、`results/analysis.json`（全部关键数字与统计量）
 - `figures/fig1_overview.png`（各案例在各域上的精度变化总览，热力图）
-- `figures/fig2_dose.png`（剂量-反应曲线，误差棒）
-- `figures/fig3_summary.png`（域内/域外精度变化对比，分组条形）
-- `figures/fig4_gap.png`（域外精度变化 vs 特征距离变化，散点 + 拟合）
+- `figures/fig2_dose.png`（剂量-反应曲线，误差棒；三档强度用点线/虚线/实线区分）
+- `figures/fig3_doseheat.png`（剂量-反应热力图：行为域、列为轮数）
+- `figures/fig4_lrdose.png`（学习率剂量-反应：末轮精度变化 vs 学习率）
+- `figures/fig5_summary.png`（域内/域外精度变化对比，分组条形）
+- `figures/fig6_gap.png`（域外精度变化 vs 特征距离变化，散点 + 拟合）
 
 每张图同时导出三种格式：`png`（600 dpi 位图）、`pdf`（矢量，字体以 TrueType 嵌入）、
 `tif`（600 dpi LZW 压缩），便于按期刊要求取用。
@@ -79,7 +81,7 @@ CPU 也能跑完整流程，只是实验部分会慢很多。
 ```
 
 `-Full` 会依次执行：`prepare_data.py all`（下载约 3 GB）→ `dataset_stats.py` →
-6 组实验（PACS 弱/强、器官 弱/强、数字 弱）→ `analyze.py`。
+7 组实验（PACS 弱/强/更弱、OrganMNIST 弱/强/更弱、Digits 弱）→ `analyze.py`。
 也可单独执行，例如只跑某一个案例：
 
 ```powershell
@@ -101,7 +103,7 @@ python scripts\analyze.py
 | 字体 | 拉丁字母与数字用 Times New Roman，中文自动回退黑体（`font.family` 列表式逐字回退） |
 | 坐标轴 | 四边闭合、刻度朝内、开启次刻度；不使用网格线 |
 | 误差 | 误差棒为 ±1 标准差（3 个随机种子）；不叠加阴影带 |
-| 配色 | **全部图均为彩色**，采用色盲友好的 Okabe-Ito 配色：图 2/图 3 的颜色表示“域”（域内统一黑色作参照，每个目标域一种颜色 + 一种标记）；图 4 的颜色表示“案例”；图 1 为红-蓝发散色标（每格标注数值） |
+| 配色 | **全部图均为彩色**，采用色盲友好的 Okabe-Ito 配色：图 2/图 3/图 4/图 5 的颜色表示“域”（域内统一黑色作参照，每个目标域一种颜色 + 一种标记）；图 6 的颜色表示“案例”；图 1、图 3 为红-蓝发散色标（每格标注数值） |
 | 线型 | 实线＝强微调、虚线＝弱微调；域身份同时由颜色/灰度与标记形状编码 |
 | 子图 | 用 (a)(b)(c) 统一编号；同一图内共享一个图例 |
 | 尺寸 | 单栏图约 8.9 cm、双栏图约 17.5 cm，字号按最终印刷尺寸设定（缩放后仍 ≥7 pt） |
@@ -118,11 +120,13 @@ python scripts\analyze.py
 | 项 | 值 |
 |---|---|
 | PACS 强微调（lr=1e-3，40 轮） | 域内 −2.67 pp；Art −16.00、Cartoon −5.00、Sketch −7.67 |
+| PACS 更弱微调（lr=1e-4，40 轮） | 域内 +0.67 pp；Art −4.33、Cartoon −6.00、Sketch −4.67 |
 | PACS 弱微调（lr=3e-4，40 轮） | 域内 −0.67 pp；Art −8.67、Cartoon −1.33、Sketch +1.67 |
 | OrganMNIST 强微调（24 轮） | 域内 +10.00；冠状位 +17.67、矢状位 −0.67 |
 | OrganMNIST 弱微调（24 轮） | 域内 +10.33；冠状位 +16.67、矢状位 −1.33 |
 | Digits 弱微调（16 轮） | 域内 +4.00；EMNIST −13.33、SVHN +2.33 |
-| 域外精度变化 vs 特征距离变化 | 总体 r=−0.24（p=1.8e−4，n=246）；案例内 PACS −0.34、器官 −0.80、数字 −0.96 |
+| OrganMNIST 更弱微调（lr=1e-4，24 轮） | 域内 +9.33；冠状位 +15.00、矢状位 −0.67 |
+| 域外精度变化 vs 特征距离变化 | 总体 r=−0.19（p=3.9e−4，n=354）；案例内 PACS −0.34、器官 −0.69、数字 −0.96 |
 
 任一数字不符，请检查 `results/*.csv` 是否被改动。
 

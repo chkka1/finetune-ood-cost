@@ -38,7 +38,7 @@ CASE_ZH = {"pacs": "PACS（自然图像）", "organ": "OrganMNIST（腹部CT）"
            "digits": "Digits（手写/街景数字）"}
 GRAYS = ["#000000", "#666666", "#AAAAAA", "#DDDDDD"]
 MARKERS = ["o", "s", "^", "v"]
-TAG_LABEL = {"": "lr=3e-4", "_strong": "lr=1e-3"}
+TAG_LABEL = {"": "lr=3e-4", "_strong": "lr=1e-3", "_lr1e4": "lr=1e-4"}
 
 
 def load():
