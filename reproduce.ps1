@@ -30,16 +30,17 @@ function Invoke-Step([string]$label, [string[]]$argv) {
 if ($Full) {
     Invoke-Step "1/8 下载并缓存三个案例（约 3 GB）" @("$root\scripts\prepare_data.py", "all")
     Invoke-Step "2/8 统计案例构成" @("$root\scripts\dataset_stats.py")
-    Invoke-Step "3/8 PACS 弱微调（lr=3e-4，16 轮）" @("$root\scripts\run_experiment.py",
-        "--case", "pacs", "--size", "128", "--epochs", "16",
-        "--eval-epochs", "1", "2", "4", "8", "16", "--seeds", "0", "1", "2", "--lr", "3e-4")
+    Invoke-Step "3/8 PACS 弱微调（lr=3e-4，40 轮，与强微调同预算）" @("$root\scripts\run_experiment.py",
+        "--case", "pacs", "--size", "128", "--epochs", "40",
+        "--eval-epochs", "1", "2", "4", "8", "16", "24", "32", "40",
+        "--seeds", "0", "1", "2", "--lr", "3e-4")
     Invoke-Step "4/8 PACS 强微调（lr=1e-3，40 轮）" @("$root\scripts\run_experiment.py",
         "--case", "pacs", "--size", "128", "--epochs", "40",
         "--eval-epochs", "1", "2", "4", "8", "16", "24", "32", "40",
         "--seeds", "0", "1", "2", "--lr", "1e-3", "--tag", "_strong")
-    Invoke-Step "5/8 OrganMNIST 弱微调（8 轮）" @("$root\scripts\run_experiment.py",
-        "--case", "organ", "--size", "64", "--epochs", "8",
-        "--eval-epochs", "1", "2", "4", "8", "--seeds", "0", "1", "2",
+    Invoke-Step "5/8 OrganMNIST 弱微调（24 轮，与强微调同预算）" @("$root\scripts\run_experiment.py",
+        "--case", "organ", "--size", "64", "--epochs", "24",
+        "--eval-epochs", "1", "2", "4", "8", "16", "24", "--seeds", "0", "1", "2",
         "--batch", "128", "--lr", "3e-4", "--max-train", "12000")
     Invoke-Step "6/8 OrganMNIST 强微调（24 轮）" @("$root\scripts\run_experiment.py",
         "--case", "organ", "--size", "64", "--epochs", "24",
