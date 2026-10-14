@@ -11,8 +11,9 @@
 制图规范（中文核心/SCI 常见约定）：
   * 拉丁字母与数字用 Times New Roman，中文回退黑体（font.family 列表式回退）
   * 坐标轴四边闭合、刻度朝内、开启次刻度；不使用网格线
-  * 误差棒为 ±1 标准差；域身份用颜色/灰度 + 标记形状双重编码，微调强度用线型
-    （图 2 为彩色，采用色盲友好的 Okabe-Ito 配色；图 1/3/4 为灰度，黑白打印可辨）
+  * 误差棒为 ±1 标准差；全部图均用彩色（色盲友好的 Okabe-Ito 配色）
+    ——图 2/图 3 的颜色表示"域"（域内统一黑色作参照），图 4 的颜色表示"案例"，
+    图 1 为红-蓝发散色标；同时保留线型与标记形状编码，黑白打印亦可辨
   * 子图用 (a)(b)(c) 标注；图宽按单栏（约 8.9 cm）/双栏（约 17.5 cm）设置
   * 同时导出 600 dpi 位图（PNG/TIF）与矢量图（PDF），便于期刊取用
 """
@@ -49,6 +50,8 @@ DOM_COLOR = {"art_painting": "#D55E00", "cartoon": "#009E73", "sketch": "#CC79A7
              "svhn": "#B58900"}
 DOM_MARK = {"art_painting": "s", "cartoon": "^", "sketch": "v",
             "coronal": "D", "sagittal": "P", "emnist": "X", "svhn": "*"}
+# 案例配色（图 4 用）：散点的颜色表示案例，与图 2/3 的"域配色"分属不同维度，各自图例已说明
+CASE_COLOR = {"pacs": "#D55E00", "organ": "#009E73", "digits": "#0072B2"}
 # 目标域统一排序（保证各图列序一致）
 DOM_ORDER = ["art_painting", "cartoon", "sketch", "coronal", "sagittal", "emnist", "svhn"]
 
@@ -218,7 +221,7 @@ def fig2_dose(A):
 
 # --------------------------------------------------------------------------- #
 def fig3_summary(A):
-    """域内/域外精度变化对比：分组条形 + 误差棒（误差棒来自逐种子标准差）。"""
+    """域内/域外精度变化对比：彩色分组条形 + 误差棒（误差棒来自逐种子标准差）。"""
     strongest = A["strongest"]
     order = ["pacs|_strong", "organ|_strong", "digits|base"]
     keys = [k for k in order if k in strongest]
@@ -229,7 +232,7 @@ def fig3_summary(A):
     for k in keys:
         v = strongest[k]
         case, tag, ep = v["case"], v["tag"], v["epoch"]
-        bars = [("域内", v["in_d_acc_pp"])]
+        bars = [("域内", v["in_d_acc_pp"], None)]
         errs = [0.0]
         rows = A["per_case"][case][tag]
         for raw in DOM_ORDER:
@@ -238,7 +241,7 @@ def fig3_summary(A):
                     sd = 0.0
                     if dom in rows and ep in rows[dom]["epochs"]:
                         sd = rows[dom]["d_acc_pp_std"][rows[dom]["epochs"].index(ep)]
-                    bars.append((DOM_SHORT.get(raw, raw), val))
+                    bars.append((DOM_SHORT.get(raw, raw), val, raw))
                     errs.append(sd)
         series.append(bars)
         errs_series.append(errs)
@@ -248,43 +251,43 @@ def fig3_summary(A):
     total_w = 0.78
     w = total_w / ncol
     fig, ax = plt.subplots(figsize=(3.6, 2.9))
-    ymax = max(v for s in series for _, v in s)
-    ymin = min(v for s in series for _, v in s)
+    ymax = max(v for s_ in series for _, v, _ in s_)
+    ymin = min(v for s_ in series for _, v, _ in s_)
     ax.set_ylim(min(-20, ymin - 4), max(21, ymax + 3))
     for j in range(ncol):
-        vals, errs, colors, hatches = [], [], [], []
-        for s, es in zip(series, errs_series):
-            if j < len(s):
-                vals.append(s[j][1]); errs.append(es[j])
-                colors.append("white" if j == 0 else GRAYS[min(j, len(GRAYS) - 1)])
-                hatches.append("" if j == 0 else ("//" if j % 2 else "\\\\"))
+        vals, errs, colors = [], [], []
+        for s_, es in zip(series, errs_series):
+            if j < len(s_):
+                nm, val, raw = s_[j]
+                vals.append(val); errs.append(es[j])
+                colors.append(COLOR_IN if raw is None else DOM_COLOR.get(raw, GRAYS[1]))
             else:
-                vals.append(np.nan); errs.append(0.0); colors.append("white"); hatches.append("")
+                vals.append(np.nan); errs.append(0.0); colors.append("white")
         ax.bar(x + (j - (ncol - 1) / 2) * w, vals, w * 0.92, yerr=errs,
-               color=colors, edgecolor="black", linewidth=0.6, hatch=hatches,
+               color=colors, edgecolor="black", linewidth=0.5,
                error_kw=dict(elinewidth=0.7, capsize=1.6, capthick=0.7, ecolor="black"))
     for j in range(ncol):
-        for i, s in enumerate(series):
-            if j < len(s):
-                val = s[j][1]
+        for i, s_ in enumerate(series):
+            if j < len(s_):
+                val = s_[j][1]
                 err = errs_series[i][j] if j < len(errs_series[i]) else 0.0
                 off = (err + 0.5) if val >= 0 else -(err + 0.5)
-                ax.text(x[i] + (j - (ncol - 1) / 2) * w, val + off,
-                        "{:+.1f}".format(val), ha="center",
-                        va="bottom" if val >= 0 else "top", fontsize=6.5)
+                ax.text(x[i] + (j - (ncol - 1) / 2) * w, val + off, "{:+.1f}".format(val),
+                        ha="center", va="bottom" if val >= 0 else "top", fontsize=6.5)
     ax.axhline(0, color="black", lw=0.8)
     ax.set_xticks(x)
     ax.set_xticklabels(labels, fontsize=8)
     ax.set_ylabel("精度变化 / 百分点", fontsize=9)
-    dom_names = []
-    for s in series:
-        for nm, _ in s[1:]:
-            if nm not in dom_names:
-                dom_names.append(nm)
-    handles = [Patch(facecolor="white", edgecolor="black", label="域内")]
-    for j, nm in enumerate(dom_names, start=1):
-        handles.append(Patch(facecolor=GRAYS[min(j, len(GRAYS) - 1)], edgecolor="black",
-                             hatch="//" if j % 2 else "\\\\", label=nm + "（域外）"))
+    handles, seen = [], set()
+    for s_ in series:
+        for nm, _, raw in s_:
+            key = raw if raw is not None else "__in__"
+            if key in seen:
+                continue
+            seen.add(key)
+            handles.append(Patch(facecolor=COLOR_IN if raw is None else DOM_COLOR.get(raw, GRAYS[1]),
+                                 edgecolor="black", linewidth=0.5,
+                                 label=nm if raw is None else (nm + "（域外）")))
     fig.legend(handles=handles, fontsize=6.8, ncol=4, loc="lower center",
                frameon=False, bbox_to_anchor=(0.5, -0.02))
     fig.tight_layout(rect=(0, 0.26, 1, 1))
@@ -309,12 +312,13 @@ def fig4_gap(A):
                         xs.append(dmmd); ys.append(dacc)
         xs, ys = np.array(xs), np.array(ys)
         xs_all += list(xs); ys_all += list(ys)
-        ax.scatter(xs, ys, s=13, marker=MARKERS[i], facecolors=GRAYS[i],
+        col = CASE_COLOR.get(c, GRAYS[i])
+        ax.scatter(xs, ys, s=13, marker=MARKERS[i], facecolors=col,
                    edgecolors="black", linewidths=0.4, label=CASE_ZH.get(c, c))
         if len(xs) > 2:
             sl, ic = np.polyfit(xs, ys, 1)
             xr = np.linspace(xs.min(), xs.max(), 30)
-            ax.plot(xr, ic + sl * xr, color=GRAYS[i], lw=1.0, ls="-")
+            ax.plot(xr, ic + sl * xr, color=col, lw=1.2, ls="-")
     xs_all, ys_all = np.array(xs_all), np.array(ys_all)
     sl, ic = np.polyfit(xs_all, ys_all, 1)
     xr = np.linspace(xs_all.min(), xs_all.max(), 50)
@@ -323,7 +327,7 @@ def fig4_gap(A):
     ax.axvline(0, color="#888888", lw=0.6)
     ax.set_xlabel("特征距离变化（MMD）", fontsize=9)
     ax.set_ylabel("域外精度变化 / 百分点", fontsize=9)
-    ax.legend(fontsize=7.5, loc="lower left", frameon=False)
+    ax.legend(fontsize=7.5, loc="lower right", frameon=False)
     ax.text(0.98, 0.97, "r = {:.2f}, P < 0.001, n = {}\n（案例内 |r| 最大 {:.2f}）".format(
         gv["pearson_r"], gv["n"],
         max(abs(v["pearson_r"]) for v in gv["per_case"].values()

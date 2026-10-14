@@ -9,7 +9,7 @@
   figures/fig3_summary.png      域内/域外精度变化对比（分组条形）
   figures/fig4_gap.png          域外精度变化 vs 特征距离变化（散点 + 拟合）
 
-制图规范集中在 plot_figures.py（中文标注、误差棒、坐标轴闭合、600 dpi + 矢量图；图 2 为彩色，其余为灰度）。
+制图规范集中在 plot_figures.py（中文标注、彩色配色、误差棒、坐标轴闭合、600 dpi + 矢量图）。
 """
 from __future__ import annotations
 
