@@ -1,0 +1,21 @@
+# 配套代码依赖
+# 实测环境：Python 3.9 + torch 2.5.1+cu121 + torchvision 0.20.1
+#
+# 安装：
+#   python -m venv .venv
+#   .venv\Scripts\python.exe -m pip install -r requirements.txt
+# GPU 用户请另按 https://pytorch.org 选择对应 CUDA 版本的 torch / torchvision。
+
+# --- 实验与统计 ---
+torch>=2.0
+torchvision>=0.15
+numpy>=1.24
+pandas>=2.0
+scipy>=1.10
+
+# --- 出图 ---
+matplotlib>=3.6
+Pillow>=9.5
+
+# --- 仅重新下载 PACS（parquet 镜像）时需要 ---
+pyarrow>=12.0

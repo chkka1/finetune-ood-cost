@@ -1,0 +1,27 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# ---- 大体积数据（请用脚本重新生成，不入库）----
+# 数据集原始下载与三个案例的 npz 缓存（约 3 GB / 480 MB）
+data/raw/
+data/medmnist/
+data/cases/*.npz
+*.parquet
+
+# ---- 中间产物 ----
+*.log
+_check/
+preview*/
+_smoke*
+*_smoke.csv
+
+# ---- 编辑器 / 系统 ----
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
