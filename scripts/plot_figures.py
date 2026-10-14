@@ -2,11 +2,12 @@
 """按中文核心/SCI 期刊通用规范绘制论文图（中文标注）。
 
 输入：results/analysis.json（由 analyze.py 生成的统计结果）
-输出：figures/fig{1..4}_*.{png,pdf,tif}
-    fig1_overview  各案例在各域上的精度变化总览（热力图，带数值标注）
-    fig2_dose      剂量-反应曲线（均值 ± 标准差误差棒）
-    fig3_summary   域内/域外精度变化对比（分组条形）
-    fig4_gap       域外精度变化与特征距离变化的关系（散点 + 拟合）
+输出：figures/fig{1..5}_*.{png,pdf,tif}
+    fig1_overview  各案例在各域上的精度变化总览（热力图）
+    fig2_doseheat  剂量-反应热力图（行为域、列为轮数）
+    fig3_lrdose    学习率剂量-反应（末轮精度变化 vs 学习率）
+    fig4_summary   域内/域外精度变化对比（分组条形）
+    fig5_gap       域外精度变化与特征距离变化的关系（散点 + 拟合）
 
 制图规范（中文核心/SCI 常见约定）：
   * 拉丁字母与数字用 Times New Roman，中文回退黑体（font.family 列表式回退）
@@ -172,86 +173,126 @@ def fig1_overview(A):
 
 
 # --------------------------------------------------------------------------- #
-def fig2_dose(A):
-    """剂量-反应：3 个子图，均值 ± 标准差误差棒。
+def pick_tag(A, c):
+    """案例所选设置：有强微调则用强微调，否则用该案例唯一的设置。"""
+    return "_strong" if "_strong" in A["per_case"][c] else sorted(A["per_case"][c])[0]
 
-    三个案例的评估网格不同（强/弱微调的轮数预算各异），因此这里统一横轴范围与刻度，
-    使同一横坐标在各子图中代表相同的微调轮数；每个子图内标注该案例实际用到的轮数预算。
+
+def fig2_doseheat(A):
+    """剂量-反应热力图（案例 × 轮数）：行=域（域内在首行），列=轮数，格内为 Δacc（百分点）。
+
+    每个案例取其实验最强设置；发散色标以 0 为中心，红=提升、蓝=下降。
     """
     cases = [c for c in ["pacs", "organ", "digits"] if c in A["per_case"]]
-    fig, axes = plt.subplots(1, len(cases), figsize=(6.69, 3.05), squeeze=False)
-    seen = {}                       # (域, 角色) -> (color, marker)：图例去重
-    xmax = 42                       # 统一横轴上限（略大于最大轮数 40）
-    yticks = {"pacs": [-30, -20, -10, 0, 10], "organ": [0, 5, 10, 15, 20],
-              "digits": [-15, -10, -5, 0, 5]}
+    panels = []
+    vmax = 0.0
+    for c in cases:
+        tag = pick_tag(A, c)
+        rows = A["per_case"][c][tag]
+        inx = [d for d, r in rows.items() if r["role"] == "in"][0]
+        order = [inx] + sorted([d for d, r in rows.items() if r["role"] == "out"],
+                               key=lambda d: DOM_ORDER.index(dom_key(d))
+                               if dom_key(d) in DOM_ORDER else 99)
+        eps = [e for e in rows[inx]["epochs"] if e > 0]
+        M = np.array([[rows[d]["d_acc_pp_mean"][rows[d]["epochs"].index(e)] for e in eps]
+                      for d in order])
+        vmax = max(vmax, float(np.nanmax(np.abs(M))))
+        panels.append((c, tag, order, eps, M))
 
-    for k, (ax, c) in enumerate(zip(axes[0], cases)):
-        tags = sorted(A["per_case"][c],
-                      key=lambda t: TAG_ORDER.index(t) if t in TAG_ORDER else 9)
-        budgets = []
-        for tag in tags:
-            linestyle = TAG_STYLE.get(tag, "-")
-            emax = 0
-            items = list(A["per_case"][c][tag].items())
-            ordered = [d for d, r in items if r["role"] == "in"]
-            ordered += sorted([d for d, r in items if r["role"] == "out"],
-                              key=lambda d: DOM_ORDER.index(dom_key(d))
-                              if dom_key(d) in DOM_ORDER else 99)
-            for i, dom in enumerate(ordered):
-                raw = dom_key(dom)
-                r = A["per_case"][c][tag][dom]
-                emax = max(emax, max(r["epochs"]))
-                role = "域内" if r["role"] == "in" else "域外"
-                nm = DOM_SHORT.get(raw, raw)
-                color = COLOR_IN if role == "域内" else DOM_COLOR.get(raw, GRAYS[1 + (i % 4)])
-                marker = "o" if role == "域内" else DOM_MARK.get(raw, MARKERS[1 + (i % 4)])
-                ax.errorbar(r["epochs"], r["d_acc_pp_mean"],
-                            yerr=np.array(r["d_acc_pp_std"]),
-                            ls=linestyle, color=color, marker=marker, ms=4.0,
-                            lw=1.7 if role == "域内" else 1.3,
-                            elinewidth=0.8, capsize=2.4, capthick=0.8,
-                            markeredgewidth=0.5, zorder=3 if role == "域内" else 2)
-                seen.setdefault((nm, role), (color, marker))
-            budgets.append((TAG_ZH.get(tag, "微调").split("（")[0], emax))
-        ax.axhline(0, color="black", lw=0.9, ls=(0, (4, 2)), zorder=1)
-        ax.set_xlim(0, xmax)
-        ax.set_xticks([0, 10, 20, 30, 40])
-        ax.set_xticks([5, 15, 25, 35], minor=True)
-        if c in yticks:
-            ax.set_yticks(yticks[c])
-        # 该案例实际用到的轮数预算（解释各曲线为何在不同位置结束）
-        if budgets and len({e for _, e in budgets}) == 1:
-            budget_txt = "各档强度均 {} 轮".format(budgets[0][1])
-        else:
-            budget_txt = " / ".join("{} {} 轮".format(n, e) for n, e in budgets)
-        ax.text(0.98, 0.03, budget_txt, transform=ax.transAxes,
-                ha="right", va="bottom", fontsize=7,
-                bbox=dict(boxstyle="round,pad=0.2", facecolor="white",
-                          edgecolor="#AAAAAA", lw=0.5))
-        panel_label(ax, "({})".format(chr(ord("a") + k)), dx=0.015, dy=0.985)
-        ax.set_title(CASE_ZH.get(c, c), fontsize=10, pad=4)
-        ax.set_xlabel("微调轮数", fontsize=9.5)
+    fig, axes = plt.subplots(1, len(panels), figsize=(6.69, 2.95), squeeze=False)
+    cmap = plt.get_cmap("RdBu_r")
+    im = None
+    for k, (ax, (c, tag, order, eps, M)) in enumerate(zip(axes[0], panels)):
+        im = ax.imshow(M, cmap=cmap, vmin=-vmax, vmax=vmax, aspect="auto")
+        ax.set_xticks(range(len(eps)))
+        ax.set_xticklabels([str(e) for e in eps], fontsize=7.5)
+        ax.set_yticks(range(len(order)))
         if k == 0:
-            ax.set_ylabel("精度变化 / 百分点", fontsize=9.5)
-        ax.tick_params(labelsize=9, width=1.0)
+            ax.set_yticklabels(["{}（{}）".format(DOM_SHORT.get(dom_key(d), dom_key(d)),
+                                                 "域内" if rows_role(A, c, tag, d) == "in" else "域外")
+                                for d in order], fontsize=7.5)
+        else:
+            ax.set_yticklabels([])
+        for i in range(len(order)):
+            for j in range(len(eps)):
+                ax.text(j, i, "{:+.1f}".format(M[i, j]), ha="center", va="center",
+                        fontsize=6, color="black")
+        ax.set_xticks(np.arange(-0.5, len(eps), 1), minor=True)
+        ax.set_yticks(np.arange(-0.5, len(order), 1), minor=True)
+        ax.grid(which="minor", color="white", lw=0.8)
+        ax.tick_params(which="both", bottom=False, left=False)
         for sp in ax.spines.values():
-            sp.set_linewidth(1.0)
+            sp.set_linewidth(0.8)
+        ax.set_xlabel("微调轮数", fontsize=8.5)
+        ax.set_title("{}（{}）".format(CASE_ZH.get(c, c), TAG_ZH.get(tag, tag).split("（")[0]),
+                     fontsize=9, pad=3)
+    cb = fig.colorbar(im, ax=list(axes[0]), fraction=0.022, pad=0.012)
+    cb.set_label("精度变化 / 百分点", fontsize=8)
+    cb.ax.tick_params(labelsize=7.5)
+    cb.outline.set_linewidth(0.6)
+    return save_all(fig, "fig2_doseheat")
 
-    handles = [Line2D([], [], color=col, marker=mk, ls="-", ms=4.0, lw=1.3)
+
+def rows_role(A, c, tag, dom):
+    return A["per_case"][c][tag][dom]["role"]
+
+
+def fig3_lrdose(A):
+    """学习率剂量-反应：横轴为学习率（对数），纵轴为末轮相对基线的精度变化。
+
+    同一案例的三档强度使用相同的轮数预算，因此横轴的变化只来自学习率。
+    """
+    cases = [c for c in ["pacs", "organ"] if c in A["per_case"]]
+    fig, axes = plt.subplots(1, len(cases), figsize=(6.69, 2.75), squeeze=False)
+    seen = {}
+    for k, (ax, c) in enumerate(zip(axes[0], cases)):
+        tags = [t for t in TAG_ORDER if t in A["per_case"][c]]
+        doms = list(A["per_case"][c][tags[0]].items())
+        inx = [d for d, r in doms if r["role"] == "in"]
+        order = inx + sorted([d for d, r in doms if r["role"] == "out"],
+                             key=lambda d: DOM_ORDER.index(dom_key(d))
+                             if dom_key(d) in DOM_ORDER else 99)
+        for i, dom in enumerate(order):
+            raw = dom_key(dom)
+            role = "域内" if A["per_case"][c][tags[0]][dom]["role"] == "in" else "域外"
+            nm = DOM_SHORT.get(raw, raw)
+            col = COLOR_IN if role == "域内" else DOM_COLOR.get(raw, GRAYS[1])
+            mk = "o" if role == "域内" else DOM_MARK.get(raw, MARKERS[1])
+            xs, ys, es = [], [], []
+            for tg in tags:
+                r = A["per_case"][c][tg].get(dom)
+                if r is None:
+                    continue
+                ep = max(r["epochs"])
+                j = r["epochs"].index(ep)
+                xs.append(LR_OF_TAG.get(tg, np.nan))
+                ys.append(r["d_acc_pp_mean"][j])
+                es.append(r["d_acc_pp_std"][j])
+            ax.errorbar(xs, ys, yerr=es, color=col, marker=mk, ms=4.5, lw=1.5,
+                        elinewidth=0.8, capsize=2.2, capthick=0.8)
+            seen.setdefault((nm, role), (col, mk))
+        ax.axhline(0, color="black", lw=0.9, ls=(0, (4, 2)))
+        ax.set_xscale("log")
+        ax.set_xticks([1e-4, 3e-4, 1e-3])
+        ax.set_xticklabels(["1e-4", "3e-4", "1e-3"], fontsize=8)
+        ax.set_xlabel("微调学习率", fontsize=8.5)
+        if k == 0:
+            ax.set_ylabel("末轮精度变化 / 百分点", fontsize=8.5)
+        ax.tick_params(labelsize=8)
+        for sp in ax.spines.values():
+            sp.set_linewidth(0.9)
+        ep = max(A["per_case"][c][tags[0]][order[0]]["epochs"])
+        ax.set_title("{}（{} 轮）".format(CASE_ZH.get(c, c), ep), fontsize=9, pad=3)
+    handles = [Line2D([], [], color=col, marker=mk, ls="-", ms=4.5, lw=1.5)
                for (col, mk) in seen.values()]
     labels = ["{}（{}）".format(nm, role) for (nm, role) in seen.keys()]
-    for tg in TAG_ORDER:
-        if any(tg in A["per_case"][c] for c in cases):
-            handles.append(Line2D([], [], color="#666666", ls=TAG_STYLE.get(tg, "-"), lw=1.4))
-            labels.append(TAG_ZH.get(tg, tg))
     fig.legend(handles, labels, loc="lower center", ncol=5, fontsize=7.5,
                frameon=False, bbox_to_anchor=(0.5, -0.05))
     fig.tight_layout(rect=(0, 0.10, 1, 1))
-    return save_all(fig, "fig2_dose")
+    return save_all(fig, "fig3_lrdose")
 
 
-# --------------------------------------------------------------------------- #
-def fig5_summary(A):
+def fig4_summary(A):
     """域内/域外精度变化对比：彩色分组条形 + 误差棒（误差棒来自逐种子标准差）。"""
     strongest = A["strongest"]
     order = ["pacs|_strong", "organ|_strong", "digits|base"]
@@ -322,11 +363,11 @@ def fig5_summary(A):
     fig.legend(handles=handles, fontsize=6.8, ncol=4, loc="lower center",
                frameon=False, bbox_to_anchor=(0.5, -0.02))
     fig.tight_layout(rect=(0, 0.26, 1, 1))
-    return save_all(fig, "fig5_summary")
+    return save_all(fig, "fig4_summary")
 
 
 # --------------------------------------------------------------------------- #
-def fig6_gap(A):
+def fig5_gap(A):
     """域外精度变化 vs 特征距离变化。"""
     gv = A["gap_vs_cost"]
     cases = [c for c in ["pacs", "organ", "digits"] if c in A["per_case"]]
@@ -365,126 +406,7 @@ def fig6_gap(A):
             if v.get("pearson_r") is not None)),
         transform=ax.transAxes, ha="right", va="top", fontsize=7.5,
         bbox=dict(boxstyle="round,pad=0.25", facecolor="white", edgecolor="#999999", lw=0.5))
-    return save_all(fig, "fig6_gap")
-
-
-def pick_tag(A, c):
-    """案例所选设置：有强微调则用强微调，否则用该案例唯一的设置。"""
-    return "_strong" if "_strong" in A["per_case"][c] else sorted(A["per_case"][c])[0]
-
-
-def fig3_doseheat(A):
-    """剂量-反应热力图（案例 × 轮数）：行=域（域内在首行），列=轮数，格内为 Δacc（百分点）。
-
-    每个案例取其实验最强设置；发散色标以 0 为中心，红=提升、蓝=下降。
-    """
-    cases = [c for c in ["pacs", "organ", "digits"] if c in A["per_case"]]
-    panels = []
-    vmax = 0.0
-    for c in cases:
-        tag = pick_tag(A, c)
-        rows = A["per_case"][c][tag]
-        inx = [d for d, r in rows.items() if r["role"] == "in"][0]
-        order = [inx] + sorted([d for d, r in rows.items() if r["role"] == "out"],
-                               key=lambda d: DOM_ORDER.index(dom_key(d))
-                               if dom_key(d) in DOM_ORDER else 99)
-        eps = [e for e in rows[inx]["epochs"] if e > 0]
-        M = np.array([[rows[d]["d_acc_pp_mean"][rows[d]["epochs"].index(e)] for e in eps]
-                      for d in order])
-        vmax = max(vmax, float(np.nanmax(np.abs(M))))
-        panels.append((c, tag, order, eps, M))
-
-    fig, axes = plt.subplots(1, len(panels), figsize=(6.69, 2.95), squeeze=False)
-    cmap = plt.get_cmap("RdBu_r")
-    im = None
-    for k, (ax, (c, tag, order, eps, M)) in enumerate(zip(axes[0], panels)):
-        im = ax.imshow(M, cmap=cmap, vmin=-vmax, vmax=vmax, aspect="auto")
-        ax.set_xticks(range(len(eps)))
-        ax.set_xticklabels([str(e) for e in eps], fontsize=7.5)
-        ax.set_yticks(range(len(order)))
-        if k == 0:
-            ax.set_yticklabels(["{}（{}）".format(DOM_SHORT.get(dom_key(d), dom_key(d)),
-                                                 "域内" if rows_role(A, c, tag, d) == "in" else "域外")
-                                for d in order], fontsize=7.5)
-        else:
-            ax.set_yticklabels([])
-        for i in range(len(order)):
-            for j in range(len(eps)):
-                ax.text(j, i, "{:+.1f}".format(M[i, j]), ha="center", va="center",
-                        fontsize=6, color="black")
-        ax.set_xticks(np.arange(-0.5, len(eps), 1), minor=True)
-        ax.set_yticks(np.arange(-0.5, len(order), 1), minor=True)
-        ax.grid(which="minor", color="white", lw=0.8)
-        ax.tick_params(which="both", bottom=False, left=False)
-        for sp in ax.spines.values():
-            sp.set_linewidth(0.8)
-        ax.set_xlabel("微调轮数", fontsize=8.5)
-        ax.set_title("{}（{}）".format(CASE_ZH.get(c, c), TAG_ZH.get(tag, tag).split("（")[0]),
-                     fontsize=9, pad=3)
-    cb = fig.colorbar(im, ax=list(axes[0]), fraction=0.022, pad=0.012)
-    cb.set_label("精度变化 / 百分点", fontsize=8)
-    cb.ax.tick_params(labelsize=7.5)
-    cb.outline.set_linewidth(0.6)
-    return save_all(fig, "fig3_doseheat")
-
-
-def rows_role(A, c, tag, dom):
-    return A["per_case"][c][tag][dom]["role"]
-
-
-def fig4_lrdose(A):
-    """学习率剂量-反应：横轴为学习率（对数），纵轴为末轮相对基线的精度变化。
-
-    同一案例的三档强度使用相同的轮数预算，因此横轴的变化只来自学习率。
-    """
-    cases = [c for c in ["pacs", "organ"] if c in A["per_case"]]
-    fig, axes = plt.subplots(1, len(cases), figsize=(6.69, 2.75), squeeze=False)
-    seen = {}
-    for k, (ax, c) in enumerate(zip(axes[0], cases)):
-        tags = [t for t in TAG_ORDER if t in A["per_case"][c]]
-        doms = list(A["per_case"][c][tags[0]].items())
-        inx = [d for d, r in doms if r["role"] == "in"]
-        order = inx + sorted([d for d, r in doms if r["role"] == "out"],
-                             key=lambda d: DOM_ORDER.index(dom_key(d))
-                             if dom_key(d) in DOM_ORDER else 99)
-        for i, dom in enumerate(order):
-            raw = dom_key(dom)
-            role = "域内" if A["per_case"][c][tags[0]][dom]["role"] == "in" else "域外"
-            nm = DOM_SHORT.get(raw, raw)
-            col = COLOR_IN if role == "域内" else DOM_COLOR.get(raw, GRAYS[1])
-            mk = "o" if role == "域内" else DOM_MARK.get(raw, MARKERS[1])
-            xs, ys, es = [], [], []
-            for tg in tags:
-                r = A["per_case"][c][tg].get(dom)
-                if r is None:
-                    continue
-                ep = max(r["epochs"])
-                j = r["epochs"].index(ep)
-                xs.append(LR_OF_TAG.get(tg, np.nan))
-                ys.append(r["d_acc_pp_mean"][j])
-                es.append(r["d_acc_pp_std"][j])
-            ax.errorbar(xs, ys, yerr=es, color=col, marker=mk, ms=4.5, lw=1.5,
-                        elinewidth=0.8, capsize=2.2, capthick=0.8)
-            seen.setdefault((nm, role), (col, mk))
-        ax.axhline(0, color="black", lw=0.9, ls=(0, (4, 2)))
-        ax.set_xscale("log")
-        ax.set_xticks([1e-4, 3e-4, 1e-3])
-        ax.set_xticklabels(["1e-4", "3e-4", "1e-3"], fontsize=8)
-        ax.set_xlabel("微调学习率", fontsize=8.5)
-        if k == 0:
-            ax.set_ylabel("末轮精度变化 / 百分点", fontsize=8.5)
-        ax.tick_params(labelsize=8)
-        for sp in ax.spines.values():
-            sp.set_linewidth(0.9)
-        ep = max(A["per_case"][c][tags[0]][order[0]]["epochs"])
-        ax.set_title("{}（{} 轮）".format(CASE_ZH.get(c, c), ep), fontsize=9, pad=3)
-    handles = [Line2D([], [], color=col, marker=mk, ls="-", ms=4.5, lw=1.5)
-               for (col, mk) in seen.values()]
-    labels = ["{}（{}）".format(nm, role) for (nm, role) in seen.keys()]
-    fig.legend(handles, labels, loc="lower center", ncol=5, fontsize=7.5,
-               frameon=False, bbox_to_anchor=(0.5, -0.05))
-    fig.tight_layout(rect=(0, 0.10, 1, 1))
-    return save_all(fig, "fig4_lrdose")
+    return save_all(fig, "fig5_gap")
 
 
 def main(analysis_path=None, verbose=True):
@@ -492,11 +414,10 @@ def main(analysis_path=None, verbose=True):
     A = json.loads(Path(analysis_path or (RESULTS / "analysis.json")).read_text(encoding="utf-8"))
     made = []
     made += fig1_overview(A)
-    made += fig2_dose(A)
-    made += fig3_doseheat(A)
-    made += fig4_lrdose(A)
-    made += fig5_summary(A)
-    made += fig6_gap(A)
+    made += fig2_doseheat(A)
+    made += fig3_lrdose(A)
+    made += fig4_summary(A)
+    made += fig5_gap(A)
     if verbose:
         for p in made:
             print("  figure:", p.name, "{:.0f} KB".format(p.stat().st_size / 1024))
