@@ -11,7 +11,8 @@
 制图规范（中文核心/SCI 常见约定）：
   * 拉丁字母与数字用 Times New Roman，中文回退黑体（font.family 列表式回退）
   * 坐标轴四边闭合、刻度朝内、开启次刻度；不使用网格线
-  * 灰度 + 线型/标记双重编码，黑白打印可辨；误差棒为 ±1 标准差
+  * 误差棒为 ±1 标准差；域身份用颜色/灰度 + 标记形状双重编码，微调强度用线型
+    （图 2 为彩色，采用色盲友好的 Okabe-Ito 配色；图 1/3/4 为灰度，黑白打印可辨）
   * 子图用 (a)(b)(c) 标注；图宽按单栏（约 8.9 cm）/双栏（约 17.5 cm）设置
   * 同时导出 600 dpi 位图（PNG/TIF）与矢量图（PDF），便于期刊取用
 """
@@ -37,9 +38,17 @@ TAG_ZH = {"": "弱微调", "_strong": "强微调"}
 DOM_SHORT = {"photo": "Photo", "art_painting": "Art", "cartoon": "Cartoon", "sketch": "Sketch",
              "axial": "轴位", "coronal": "冠状位", "sagittal": "矢状位",
              "mnist": "MNIST", "emnist": "EMNIST", "svhn": "SVHN"}
-# 灰度 + 标记：域身份用颜色/标记，微调强度用线型（实线=强，虚线=弱）
+# 灰度方案（图 1、图 3、图 4 使用）：域身份用灰度/标记，微调强度用线型
 GRAYS = ["#000000", "#5A5A5A", "#9A9A9A", "#C8C8C8", "#E8E8E8"]
 MARKERS = ["o", "s", "^", "v", "D"]
+# 彩色方案（图 2 专用）：色盲友好的 Okabe-Ito 配色
+#   域内（源域）统一用黑色作参照；每个目标域一种颜色 + 一种标记，同一图内不重复
+COLOR_IN = "#000000"
+DOM_COLOR = {"art_painting": "#D55E00", "cartoon": "#009E73", "sketch": "#CC79A7",
+             "coronal": "#E69F00", "sagittal": "#56B4E9", "emnist": "#0072B2",
+             "svhn": "#B58900"}
+DOM_MARK = {"art_painting": "s", "cartoon": "^", "sketch": "v",
+            "coronal": "D", "sagittal": "P", "emnist": "X", "svhn": "*"}
 # 目标域统一排序（保证各图列序一致）
 DOM_ORDER = ["art_painting", "cartoon", "sketch", "coronal", "sagittal", "emnist", "svhn"]
 
@@ -179,12 +188,12 @@ def fig2_dose(A):
                 r = A["per_case"][c][tag][dom]
                 role = "域内" if r["role"] == "in" else "域外"
                 nm = DOM_SHORT.get(raw, raw)
-                color = GRAYS[0] if role == "域内" else GRAYS[1 + (i % 4)]
-                marker = MARKERS[0] if role == "域内" else MARKERS[1 + (i % 4)]
+                color = COLOR_IN if role == "域内" else DOM_COLOR.get(raw, GRAYS[1 + (i % 4)])
+                marker = "o" if role == "域内" else DOM_MARK.get(raw, MARKERS[1 + (i % 4)])
                 ax.errorbar(r["epochs"], r["d_acc_pp_mean"],
                             yerr=np.array(r["d_acc_pp_std"]),
                             ls=linestyle, color=color, marker=marker, ms=3.2,
-                            lw=1.0 if role == "域内" else 0.9,
+                            lw=1.3 if role == "域内" else 1.0,
                             elinewidth=0.7, capsize=1.8, capthick=0.7)
                 seen.setdefault((nm, role), (color, marker))
         ax.axhline(0, color="black", lw=0.7, ls=(0, (4, 2)))
@@ -198,8 +207,8 @@ def fig2_dose(A):
     handles = [Line2D([], [], color=col, marker=mk, ls="-", ms=3.2, lw=1.0)
                for (col, mk) in seen.values()]
     labels = ["{}（{}）".format(nm, role) for (nm, role) in seen.keys()]
-    handles += [Line2D([], [], color="#5A5A5A", ls="-", lw=1.0),
-                Line2D([], [], color="#5A5A5A", ls="--", lw=1.0)]
+    handles += [Line2D([], [], color="#666666", ls="-", lw=1.1),
+                Line2D([], [], color="#666666", ls="--", lw=1.1)]
     labels += ["实线：强微调", "虚线：弱微调"]
     fig.legend(handles, labels, loc="lower center", ncol=4, fontsize=7.5,
                frameon=False, bbox_to_anchor=(0.5, -0.055))
