@@ -170,17 +170,25 @@ def fig1_overview(A):
 
 # --------------------------------------------------------------------------- #
 def fig2_dose(A):
-    """剂量-反应：3 个子图，均值 ± 标准差误差棒。"""
+    """剂量-反应：3 个子图，均值 ± 标准差误差棒。
+
+    三个案例的评估网格不同（强/弱微调的轮数预算各异），因此这里统一横轴范围与刻度，
+    使同一横坐标在各子图中代表相同的微调轮数；每个子图内标注该案例实际用到的轮数预算。
+    """
     cases = [c for c in ["pacs", "organ", "digits"] if c in A["per_case"]]
-    fig, axes = plt.subplots(1, len(cases), figsize=(6.9, 2.45), squeeze=False)
-    seen = {}           # (域, 角色) -> (color, marker)：图例去重
+    fig, axes = plt.subplots(1, len(cases), figsize=(6.9, 3.15), squeeze=False)
+    seen = {}                       # (域, 角色) -> (color, marker)：图例去重
+    xmax = 42                       # 统一横轴上限（略大于最大轮数 40）
+    yticks = {"pacs": [-30, -20, -10, 0, 10], "organ": [0, 5, 10, 15, 20],
+              "digits": [-15, -10, -5, 0, 5]}
 
     for k, (ax, c) in enumerate(zip(axes[0], cases)):
         tags = sorted(A["per_case"][c])
         base_tag = "" if "" in tags else tags[0]
+        budgets = []
         for tag in tags:
             linestyle = "-" if (tag != base_tag or len(tags) == 1) else "--"
-            # 域的绘图顺序：域内（源域）在前，其后按 DOM_ORDER 排列的目标域
+            emax = 0
             items = list(A["per_case"][c][tag].items())
             ordered = [d for d, r in items if r["role"] == "in"]
             ordered += sorted([d for d, r in items if r["role"] == "out"],
@@ -189,32 +197,47 @@ def fig2_dose(A):
             for i, dom in enumerate(ordered):
                 raw = dom_key(dom)
                 r = A["per_case"][c][tag][dom]
+                emax = max(emax, max(r["epochs"]))
                 role = "域内" if r["role"] == "in" else "域外"
                 nm = DOM_SHORT.get(raw, raw)
                 color = COLOR_IN if role == "域内" else DOM_COLOR.get(raw, GRAYS[1 + (i % 4)])
                 marker = "o" if role == "域内" else DOM_MARK.get(raw, MARKERS[1 + (i % 4)])
                 ax.errorbar(r["epochs"], r["d_acc_pp_mean"],
                             yerr=np.array(r["d_acc_pp_std"]),
-                            ls=linestyle, color=color, marker=marker, ms=3.2,
-                            lw=1.3 if role == "域内" else 1.0,
-                            elinewidth=0.7, capsize=1.8, capthick=0.7)
+                            ls=linestyle, color=color, marker=marker, ms=4.0,
+                            lw=1.7 if role == "域内" else 1.3,
+                            elinewidth=0.8, capsize=2.4, capthick=0.8,
+                            markeredgewidth=0.5, zorder=3 if role == "域内" else 2)
                 seen.setdefault((nm, role), (color, marker))
-        ax.axhline(0, color="black", lw=0.7, ls=(0, (4, 2)))
-        panel_label(ax, "({})".format(chr(ord("a") + k)))
-        ax.set_title(CASE_ZH.get(c, c), fontsize=9.5, pad=3)
-        ax.set_xlabel("微调轮数", fontsize=9)
+            budgets.append("{} {} 轮".format(TAG_ZH.get(tag, "微调"), emax))
+        ax.axhline(0, color="black", lw=0.9, ls=(0, (4, 2)), zorder=1)
+        ax.set_xlim(0, xmax)
+        ax.set_xticks([0, 10, 20, 30, 40])
+        ax.set_xticks([5, 15, 25, 35], minor=True)
+        if c in yticks:
+            ax.set_yticks(yticks[c])
+        # 该案例实际用到的轮数预算（解释各曲线为何在不同位置结束）
+        ax.text(0.98, 0.03, " / ".join(budgets), transform=ax.transAxes,
+                ha="right", va="bottom", fontsize=7,
+                bbox=dict(boxstyle="round,pad=0.2", facecolor="white",
+                          edgecolor="#AAAAAA", lw=0.5))
+        panel_label(ax, "({})".format(chr(ord("a") + k)), dx=0.015, dy=0.985)
+        ax.set_title(CASE_ZH.get(c, c), fontsize=10, pad=4)
+        ax.set_xlabel("微调轮数", fontsize=9.5)
         if k == 0:
-            ax.set_ylabel("精度变化 / 百分点", fontsize=9)
-        ax.tick_params(labelsize=8.5)
+            ax.set_ylabel("精度变化 / 百分点", fontsize=9.5)
+        ax.tick_params(labelsize=9, width=1.0)
+        for sp in ax.spines.values():
+            sp.set_linewidth(1.0)
 
-    handles = [Line2D([], [], color=col, marker=mk, ls="-", ms=3.2, lw=1.0)
+    handles = [Line2D([], [], color=col, marker=mk, ls="-", ms=4.0, lw=1.3)
                for (col, mk) in seen.values()]
     labels = ["{}（{}）".format(nm, role) for (nm, role) in seen.keys()]
-    handles += [Line2D([], [], color="#666666", ls="-", lw=1.1),
-                Line2D([], [], color="#666666", ls="--", lw=1.1)]
+    handles += [Line2D([], [], color="#666666", ls="-", lw=1.4),
+                Line2D([], [], color="#666666", ls="--", lw=1.4)]
     labels += ["实线：强微调", "虚线：弱微调"]
-    fig.legend(handles, labels, loc="lower center", ncol=4, fontsize=7.5,
-               frameon=False, bbox_to_anchor=(0.5, -0.055))
+    fig.legend(handles, labels, loc="lower center", ncol=5, fontsize=7.5,
+               frameon=False, bbox_to_anchor=(0.5, -0.05))
     fig.tight_layout(rect=(0, 0.10, 1, 1))
     return save_all(fig, "fig2_dose")
 
