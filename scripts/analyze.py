@@ -3,10 +3,13 @@
 
 产出：
   results/analysis_summary.md   全部关键数字
-  results/analysis.json         机器可读
-  figures/fig2_dose.png         剂量-反应曲线（域内 vs 各域外；实线/虚线=不同微调强度）
-  figures/fig3_gap.png          域外代价 vs 特征距离变化（核心图）
-  figures/fig4_summary.png      各设置最终域内/域外增益对比
+  results/analysis.json         机器可读（供 plot_figures.py 与 build_paper.py 使用）
+  figures/fig1_overview.png     各案例在各域上的精度变化总览（热力图）
+  figures/fig2_dose.png         剂量-反应曲线（均值 ± 标准差误差棒）
+  figures/fig3_summary.png      域内/域外精度变化对比（分组条形）
+  figures/fig4_gap.png          域外精度变化 vs 特征距离变化（散点 + 拟合）
+
+制图规范集中在 plot_figures.py（中文标注、灰度安全、误差棒、坐标轴闭合、600 dpi + 矢量图）。
 """
 from __future__ import annotations
 
@@ -139,85 +142,16 @@ def main():
     (RESULTS / "analysis.json").write_text(json.dumps(out, ensure_ascii=False, indent=2),
                                            encoding="utf-8")
 
-    # ---------- 图 2 ----------
-    fig, axes = plt.subplots(1, len(cases), figsize=(3.2 * len(cases), 3.1), squeeze=False)
-    for ax, c in zip(axes[0], cases):
-        tags = sorted(out["per_case"][c])
-        base_tag = "" if "" in tags else tags[0]
-        for tag in tags:
-            ls = "--" if (tag == base_tag and len(tags) > 1) else "-"
-            for i, (dom, r) in enumerate(out["per_case"][c][tag].items()):
-                ax.plot(r["epochs"], r["d_acc_pp_mean"], marker=MARKERS[i % 4], color=GRAYS[i % 4],
-                        ls=ls, lw=2.0 if r["role"] == "in" else 1.4, ms=4.5,
-                        label="{} {}{}".format(dom.split("(")[0],
-                                               "域内" if r["role"] == "in" else "",
-                                               "" if len(tags) == 1 else " " + TAG_LABEL.get(tag, tag)))
-                ax.fill_between(r["epochs"],
-                                np.array(r["d_acc_pp_mean"]) - np.array(r["d_acc_pp_std"]),
-                                np.array(r["d_acc_pp_mean"]) + np.array(r["d_acc_pp_std"]),
-                                color=GRAYS[i % 4], alpha=0.10, lw=0)
-        ax.axhline(0, color="black", lw=0.8, ls=":")
-        ax.set_title(CASE_ZH.get(c, c), fontsize=10)
-        ax.set_xlabel("微调轮数", fontsize=9)
-        ax.set_ylabel("相对未微调的精度变化 / 百分点", fontsize=9)
-        ax.tick_params(labelsize=8)
-        ax.legend(fontsize=6.5, frameon=False, ncol=2)
-        ax.grid(alpha=0.25, lw=0.5)
-    plt.tight_layout()
-    plt.savefig(FIG / "fig2_dose.png")
-    plt.close()
-
-    # ---------- 图 3 ----------
-    plt.figure(figsize=(4.4, 3.4))
-    for i, c in enumerate(cases):
-        s = tgt[tgt["case"] == c]
-        plt.scatter(s["d_mmd"], s["d_acc_pp"], s=17, marker=MARKERS[i % 4],
-                    facecolors=GRAYS[i], edgecolors="black", linewidths=0.4,
-                    label=CASE_ZH.get(c, c).split("（")[0])
-    xs = np.linspace(tgt["d_mmd"].min(), tgt["d_mmd"].max(), 50)
-    # 每个案例各自的拟合线（体现"案例内关系强、跨案例被结构差异削弱"）
-    for i, c in enumerate(cases):
-        s_c = tgt[tgt["case"] == c]
-        if len(s_c) > 2:
-            sl, ic, rv, pv, se = stats.linregress(s_c["d_mmd"], s_c["d_acc_pp"])
-            xc = np.linspace(s_c["d_mmd"].min(), s_c["d_mmd"].max(), 30)
-            plt.plot(xc, ic + sl * xc, color=GRAYS[i], lw=1.6, alpha=0.9)
-    plt.plot(xs, intercept + slope * xs, color="black", lw=1.2, ls="--")
-    plt.axhline(0, color="gray", lw=0.7); plt.axvline(0, color="gray", lw=0.7)
-    plt.xlabel("域间特征距离变化（MMD，相对未微调）", fontsize=9)
-    plt.ylabel("域外精度变化 / 百分点", fontsize=9)
-    plt.title("虚线＝总体 r = {:.2f}（n = {}）；实线＝各案例拟合".format(pr, len(tgt)), fontsize=8.5)
-    plt.legend(fontsize=7, frameon=False)
-    plt.grid(alpha=0.25, lw=0.5)
-    plt.tight_layout()
-    plt.savefig(FIG / "fig3_gap.png")
-    plt.close()
-
-    # ---------- 图 4 ----------
-    labels = ["{}\n{}".format(CASE_ZH.get(v["case"], v["case"]).split("（")[0],
-                              TAG_LABEL.get(v["tag"], v["tag"] or "base"))
-              for v in strongest.values()]
-    din = [v["in_d_acc_pp"] for v in strongest.values()]
-    dout = [v["out_mean_d_acc_pp"] for v in strongest.values()]
-    x = np.arange(len(labels)); w = 0.36
-    plt.figure(figsize=(max(4.4, 1.35 * len(labels) + 1.6), 3.2))
-    plt.bar(x - w / 2, din, w, color="white", edgecolor="black", lw=1.2, label="域内")
-    plt.bar(x + w / 2, dout, w, color="#777777", edgecolor="black", lw=1.2, label="域外（均值）")
-    for xi, v in zip(x - w / 2, din):
-        plt.text(xi, v + (0.4 if v >= 0 else -1.8), "{:+.1f}".format(v), ha="center", fontsize=8)
-    for xi, v in zip(x + w / 2, dout):
-        plt.text(xi, v + (0.4 if v >= 0 else -1.8), "{:+.1f}".format(v), ha="center", fontsize=8)
-    plt.axhline(0, color="black", lw=0.8)
-    plt.xticks(x, labels, fontsize=8)
-    plt.ylabel("精度变化 / 百分点", fontsize=9)
-    plt.legend(fontsize=8, frameon=False)
-    plt.grid(axis="y", alpha=0.25, lw=0.5)
-    plt.tight_layout()
-    plt.savefig(FIG / "fig4_summary.png")
-    plt.close()
+    # ---------- 出图（期刊规范制图集中在 plot_figures.py）----------
+    here = Path(__file__).resolve().parent
+    if str(here) not in sys.path:
+        sys.path.insert(0, str(here))
+    import plot_figures
+    print("figures ->")
+    plot_figures.main(RESULTS / "analysis.json")
 
     # ---------- 文本 ----------
-    L = ["# 汇总结果：域内/域外精度变化与特征距离", ""]
+    L = ["# 微调的域内收益与域外代价：汇总", ""]
     for c in cases:
         L.append("## {}".format(CASE_ZH.get(c, c)))
         for tag, rows in out["per_case"][c].items():

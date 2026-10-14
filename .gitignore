@@ -1,4 +1,4 @@
-# ---- Python ----
+﻿# ---- Python ----
 __pycache__/
 *.py[cod]
 *.egg-info/
@@ -6,22 +6,25 @@ __pycache__/
 venv/
 env/
 
-# ---- 大体积数据（请用脚本重新生成，不入库）----
-# 数据集原始下载与三个案例的 npz 缓存（约 3 GB / 480 MB）
-data/raw/
+# ---- 澶т綋绉暟鎹紙璇风敤鑴氭湰閲嶆柊鐢熸垚锛屼笉鍏ュ簱锛?---
+# 鏁版嵁闆嗗師濮嬩笅杞戒笌涓変釜妗堜緥鐨?npz 缂撳瓨锛堢害 3 GB / 480 MB锛?data/raw/
 data/medmnist/
 data/cases/*.npz
 *.parquet
 
-# ---- 中间产物 ----
+# ---- 涓棿浜х墿 ----
 *.log
 _check/
 preview*/
 _smoke*
 *_smoke.csv
 
-# ---- 编辑器 / 系统 ----
+# ---- 缂栬緫鍣?/ 绯荤粺 ----
 .vscode/
 .idea/
 Thumbs.db
 desktop.ini
+
+# ---- 出图时另存的矢量/位图副本（PNG 已提交，其余可由脚本重生成）----
+figures/*.pdf
+figures/*.tif

@@ -23,9 +23,10 @@
 │   ├── prepare_data.py     下载三个案例并统一缓存为 npz（含抽样可视化校验）
 │   ├── dataset_stats.py    统计案例构成 → results/dataset_stats.json
 │   ├── run_experiment.py   核心：微调 + 逐轮跨域评估 + 特征距离诊断
-│   └── analyze.py          汇总、统计检验、出图（fig2/fig3/fig4）
+│   ├── analyze.py          汇总与统计检验 → results/analysis.json + analysis_summary.md
+│   └── plot_figures.py     按期刊规范出图（图 1~图 4；PNG 600 dpi + PDF 矢量 + TIFF）
 ├── results/                已提交的真实实验结果（CSV/JSON，约 70 KB）
-├── figures/                三张结果图 + 数据抽样确认图
+├── figures/                四张结果图（fig1~fig4）+ 数据抽样确认图
 ├── data/cases/             空目录：npz 案例缓存（约 480 MB，需生成，不随仓库分发）
 ├── requirements.txt
 ├── reproduce.ps1           一键复现
@@ -53,14 +54,21 @@ CPU 也能跑完整流程，只是实验部分会慢很多。
 
 ### 3.1 快速复现（离线，约 1 分钟；不需要下载数据）
 
-已提交 `results/` 中的**全部逐轮原始结果**，因此一步即可重现每个数字与三张图：
+已提交 `results/` 中的**全部逐轮原始结果**，因此一步即可重现每个数字与全部结果图：
 
 ```powershell
-.\reproduce.ps1            # 等价于 analyze.py
+.\reproduce.ps1            # 等价于 analyze.py（统计 + 调用 plot_figures.py 出图）
 ```
 
-产出：`figures/fig2_dose.png`、`fig3_gap.png`、`fig4_summary.png`、
-`results/analysis_summary.md`、`results/analysis.json`。
+产出：
+- `results/analysis_summary.md`、`results/analysis.json`（全部关键数字与统计量）
+- `figures/fig1_overview.png`（各案例在各域上的精度变化总览，热力图）
+- `figures/fig2_dose.png`（剂量-反应曲线，误差棒）
+- `figures/fig3_summary.png`（域内/域外精度变化对比，分组条形）
+- `figures/fig4_gap.png`（域外精度变化 vs 特征距离变化，散点 + 拟合）
+
+每张图同时导出三种格式：`png`（600 dpi 位图）、`pdf`（矢量，字体以 TrueType 嵌入）、
+`tif`（600 dpi LZW 压缩），便于按期刊要求取用。
 
 ### 3.2 完整复现（重新下载数据 + 重跑全部实验，约 1 小时）
 
@@ -81,6 +89,24 @@ python scripts\analyze.py
 
 `run_experiment.py` 的输出 CSV 是**逐行追加**的：中断后重跑会自动跳过已有 (seed, epoch)，
 不会重复计算。
+
+### 3.3 图表规范（plot_figures.py）
+
+出图按中文核心与 SCI 论文的通用制图约定实现，便于直接投稿：
+
+| 规范项 | 实现方式 |
+|---|---|
+| 字体 | 拉丁字母与数字用 Times New Roman，中文自动回退黑体（`font.family` 列表式逐字回退） |
+| 坐标轴 | 四边闭合、刻度朝内、开启次刻度；不使用网格线 |
+| 误差 | 误差棒为 ±1 标准差（3 个随机种子）；不叠加阴影带 |
+| 黑白可读 | 纯灰度 + 线型（实线=强微调/虚线=弱微调）与标记形状双重编码，条形图用斜线填充区分 |
+| 子图 | 用 (a)(b)(c) 统一编号；同一图内共享一个图例 |
+| 尺寸 | 单栏图约 8.9 cm、双栏图约 17.5 cm，字号按最终印刷尺寸设定（缩放后仍 ≥7 pt） |
+| 导出 | 同时输出 PNG（600 dpi）、PDF（矢量，TrueType 嵌入）、TIFF（LZW） |
+| 文字 | 全中文标注；统计量写作 `r = …`、`P < …`、`n = …`，不使用与中文字体混排的数学公式排版 |
+
+论文中的表格采用**三线表**（仅顶线、表头线、底线，无竖线），表题在表上方居中，
+数字列右对齐以便按位读数。
 
 ---
 
