@@ -39,6 +39,8 @@ CASE_ZH = {"pacs": "PACS（自然图像）", "organ": "OrganMNIST（腹部CT）"
 GRAYS = ["#000000", "#666666", "#AAAAAA", "#DDDDDD"]
 MARKERS = ["o", "s", "^", "v"]
 TAG_LABEL = {"": "lr=3e-4", "_strong": "lr=1e-3", "_lr1e4": "lr=1e-4"}
+# 主序列：正文的全部数字都来自这一组（backbone/size 对照实验由 robustness_check.py 单独分析）
+MAIN_BACKBONE, MAIN_SIZE = "resnet18", 128
 
 
 def load():
