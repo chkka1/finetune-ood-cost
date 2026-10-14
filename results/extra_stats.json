@@ -1,0 +1,712 @@
+{
+  "n_rows": 1125,
+  "c1": {
+    "effects": [
+      {
+        "case": "pacs",
+        "tag": "_lr1e4",
+        "domain": "art_painting(域外)",
+        "role": "out",
+        "epoch": 40,
+        "n_seed": 5,
+        "mean": -5.4,
+        "sd": 1.67,
+        "ci95": [
+          -7.48,
+          -3.32
+        ],
+        "p_vs0": 0.0019556862701064497
+      },
+      {
+        "case": "pacs",
+        "tag": "_lr1e4",
+        "domain": "cartoon(域外)",
+        "role": "out",
+        "epoch": 40,
+        "n_seed": 5,
+        "mean": -6.4,
+        "sd": 2.61,
+        "ci95": [
+          -9.64,
+          -3.16
+        ],
+        "p_vs0": 0.005370441980612568
+      },
+      {
+        "case": "pacs",
+        "tag": "_lr1e4",
+        "domain": "photo(域内)",
+        "role": "in",
+        "epoch": 40,
+        "n_seed": 5,
+        "mean": 0.4,
+        "sd": 0.55,
+        "ci95": [
+          -0.28,
+          1.08
+        ],
+        "p_vs0": 0.17780780835622126
+      },
+      {
+        "case": "pacs",
+        "tag": "_lr1e4",
+        "domain": "sketch(域外)",
+        "role": "out",
+        "epoch": 40,
+        "n_seed": 5,
+        "mean": -4.0,
+        "sd": 2.74,
+        "ci95": [
+          -7.4,
+          -0.6
+        ],
+        "p_vs0": 0.030905834747225257
+      },
+      {
+        "case": "pacs",
+        "tag": "",
+        "domain": "art_painting(域外)",
+        "role": "out",
+        "epoch": 40,
+        "n_seed": 5,
+        "mean": -9.2,
+        "sd": 2.28,
+        "ci95": [
+          -12.03,
+          -6.37
+        ],
+        "p_vs0": 0.0008361861706832415
+      },
+      {
+        "case": "pacs",
+        "tag": "",
+        "domain": "cartoon(域外)",
+        "role": "out",
+        "epoch": 40,
+        "n_seed": 5,
+        "mean": -2.8,
+        "sd": 5.02,
+        "ci95": [
+          -9.03,
+          3.43
+        ],
+        "p_vs0": 0.2803556433904313
+      },
+      {
+        "case": "pacs",
+        "tag": "",
+        "domain": "photo(域内)",
+        "role": "in",
+        "epoch": 40,
+        "n_seed": 5,
+        "mean": -0.6,
+        "sd": 0.55,
+        "ci95": [
+          -1.28,
+          0.08
+        ],
+        "p_vs0": 0.07048399691021995
+      },
+      {
+        "case": "pacs",
+        "tag": "",
+        "domain": "sketch(域外)",
+        "role": "out",
+        "epoch": 40,
+        "n_seed": 5,
+        "mean": 1.6,
+        "sd": 7.37,
+        "ci95": [
+          -7.55,
+          10.75
+        ],
+        "p_vs0": 0.6527036775370563
+      },
+      {
+        "case": "pacs",
+        "tag": "_strong",
+        "domain": "art_painting(域外)",
+        "role": "out",
+        "epoch": 40,
+        "n_seed": 5,
+        "mean": -15.6,
+        "sd": 2.07,
+        "ci95": [
+          -18.17,
+          -13.03
+        ],
+        "p_vs0": 7.319591691280585e-05
+      },
+      {
+        "case": "pacs",
+        "tag": "_strong",
+        "domain": "cartoon(域外)",
+        "role": "out",
+        "epoch": 40,
+        "n_seed": 5,
+        "mean": -6.2,
+        "sd": 4.92,
+        "ci95": [
+          -12.31,
+          -0.09
+        ],
+        "p_vs0": 0.04791657220186032
+      },
+      {
+        "case": "pacs",
+        "tag": "_strong",
+        "domain": "photo(域内)",
+        "role": "in",
+        "epoch": 40,
+        "n_seed": 5,
+        "mean": -2.6,
+        "sd": 0.55,
+        "ci95": [
+          -3.28,
+          -1.92
+        ],
+        "p_vs0": 0.00044595366474078094
+      },
+      {
+        "case": "pacs",
+        "tag": "_strong",
+        "domain": "sketch(域外)",
+        "role": "out",
+        "epoch": 40,
+        "n_seed": 5,
+        "mean": -7.6,
+        "sd": 5.86,
+        "ci95": [
+          -14.87,
+          -0.33
+        ],
+        "p_vs0": 0.0440431097300738
+      },
+      {
+        "case": "organ",
+        "tag": "_lr1e4",
+        "domain": "axial(域内)",
+        "role": "in",
+        "epoch": 24,
+        "n_seed": 5,
+        "mean": 9.2,
+        "sd": 0.45,
+        "ci95": [
+          8.64,
+          9.76
+        ],
+        "p_vs0": 1.3358351715321442e-06
+      },
+      {
+        "case": "organ",
+        "tag": "_lr1e4",
+        "domain": "coronal(域外)",
+        "role": "out",
+        "epoch": 24,
+        "n_seed": 5,
+        "mean": 15.4,
+        "sd": 0.89,
+        "ci95": [
+          14.29,
+          16.51
+        ],
+        "p_vs0": 2.7186765537467594e-06
+      },
+      {
+        "case": "organ",
+        "tag": "_lr1e4",
+        "domain": "sagittal(域外)",
+        "role": "out",
+        "epoch": 24,
+        "n_seed": 5,
+        "mean": -0.4,
+        "sd": 0.55,
+        "ci95": [
+          -1.08,
+          0.28
+        ],
+        "p_vs0": 0.17780780835622126
+      },
+      {
+        "case": "organ",
+        "tag": "",
+        "domain": "axial(域内)",
+        "role": "in",
+        "epoch": 24,
+        "n_seed": 5,
+        "mean": 10.2,
+        "sd": 0.45,
+        "ci95": [
+          9.64,
+          10.76
+        ],
+        "p_vs0": 8.846229821586193e-07
+      },
+      {
+        "case": "organ",
+        "tag": "",
+        "domain": "coronal(域外)",
+        "role": "out",
+        "epoch": 24,
+        "n_seed": 5,
+        "mean": 17.4,
+        "sd": 2.07,
+        "ci95": [
+          14.83,
+          19.97
+        ],
+        "p_vs0": 4.750851083600076e-05
+      },
+      {
+        "case": "organ",
+        "tag": "",
+        "domain": "sagittal(域外)",
+        "role": "out",
+        "epoch": 24,
+        "n_seed": 5,
+        "mean": -1.0,
+        "sd": 1.41,
+        "ci95": [
+          -2.76,
+          0.76
+        ],
+        "p_vs0": 0.18900365845517572
+      },
+      {
+        "case": "organ",
+        "tag": "_strong",
+        "domain": "axial(域内)",
+        "role": "in",
+        "epoch": 24,
+        "n_seed": 5,
+        "mean": 9.8,
+        "sd": 0.45,
+        "ci95": [
+          9.24,
+          10.36
+        ],
+        "p_vs0": 1.037915555136906e-06
+      },
+      {
+        "case": "organ",
+        "tag": "_strong",
+        "domain": "coronal(域外)",
+        "role": "out",
+        "epoch": 24,
+        "n_seed": 5,
+        "mean": 18.2,
+        "sd": 1.3,
+        "ci95": [
+          16.58,
+          19.82
+        ],
+        "p_vs0": 6.2785231194128835e-06
+      },
+      {
+        "case": "organ",
+        "tag": "_strong",
+        "domain": "sagittal(域外)",
+        "role": "out",
+        "epoch": 24,
+        "n_seed": 5,
+        "mean": -0.4,
+        "sd": 0.89,
+        "ci95": [
+          -1.51,
+          0.71
+        ],
+        "p_vs0": 0.3739009663000589
+      },
+      {
+        "case": "digits",
+        "tag": "_lr1e4",
+        "domain": "emnist(域外)",
+        "role": "out",
+        "epoch": 16,
+        "n_seed": 5,
+        "mean": -11.8,
+        "sd": 2.39,
+        "ci95": [
+          -14.76,
+          -8.84
+        ],
+        "p_vs0": 0.0003811469571785093
+      },
+      {
+        "case": "digits",
+        "tag": "_lr1e4",
+        "domain": "mnist(域内)",
+        "role": "in",
+        "epoch": 16,
+        "n_seed": 5,
+        "mean": 4.0,
+        "sd": 0.0,
+        "ci95": [
+          4.0,
+          4.0
+        ],
+        "p_vs0": 0.0
+      },
+      {
+        "case": "digits",
+        "tag": "_lr1e4",
+        "domain": "svhn(域外)",
+        "role": "out",
+        "epoch": 16,
+        "n_seed": 5,
+        "mean": -2.8,
+        "sd": 0.45,
+        "ci95": [
+          -3.36,
+          -2.24
+        ],
+        "p_vs0": 0.00015101140222180095
+      },
+      {
+        "case": "digits",
+        "tag": "",
+        "domain": "emnist(域外)",
+        "role": "out",
+        "epoch": 16,
+        "n_seed": 5,
+        "mean": -14.6,
+        "sd": 2.07,
+        "ci95": [
+          -17.17,
+          -12.03
+        ],
+        "p_vs0": 9.509221441030352e-05
+      },
+      {
+        "case": "digits",
+        "tag": "",
+        "domain": "mnist(域内)",
+        "role": "in",
+        "epoch": 16,
+        "n_seed": 5,
+        "mean": 4.0,
+        "sd": 0.0,
+        "ci95": [
+          4.0,
+          4.0
+        ],
+        "p_vs0": 0.0
+      },
+      {
+        "case": "digits",
+        "tag": "",
+        "domain": "svhn(域外)",
+        "role": "out",
+        "epoch": 16,
+        "n_seed": 5,
+        "mean": 1.2,
+        "sd": 2.17,
+        "ci95": [
+          -1.49,
+          3.89
+        ],
+        "p_vs0": 0.2835110642276424
+      },
+      {
+        "case": "digits",
+        "tag": "_strong",
+        "domain": "emnist(域外)",
+        "role": "out",
+        "epoch": 16,
+        "n_seed": 5,
+        "mean": -15.4,
+        "sd": 0.55,
+        "ci95": [
+          -16.08,
+          -14.72
+        ],
+        "p_vs0": 3.833881901632187e-07
+      },
+      {
+        "case": "digits",
+        "tag": "_strong",
+        "domain": "mnist(域内)",
+        "role": "in",
+        "epoch": 16,
+        "n_seed": 5,
+        "mean": 3.8,
+        "sd": 0.45,
+        "ci95": [
+          3.24,
+          4.36
+        ],
+        "p_vs0": 4.5202131079409634e-05
+      },
+      {
+        "case": "digits",
+        "tag": "_strong",
+        "domain": "svhn(域外)",
+        "role": "out",
+        "epoch": 16,
+        "n_seed": 5,
+        "mean": 0.8,
+        "sd": 2.59,
+        "ci95": [
+          -2.41,
+          4.01
+        ],
+        "p_vs0": 0.5275206451698228
+      }
+    ],
+    "paired": [
+      {
+        "case": "pacs",
+        "domain": "art_painting(域外)",
+        "role": "out",
+        "epoch": 40,
+        "strong_mean": -15.6,
+        "weak_mean": -9.2,
+        "diff": -6.4,
+        "ci95_diff": [
+          -8.97,
+          -3.83
+        ],
+        "p_paired": 0.0023118419583757384,
+        "n_pair": 5
+      },
+      {
+        "case": "pacs",
+        "domain": "cartoon(域外)",
+        "role": "out",
+        "epoch": 40,
+        "strong_mean": -6.2,
+        "weak_mean": -2.8,
+        "diff": -3.4,
+        "ci95_diff": [
+          -12.76,
+          5.96
+        ],
+        "p_paired": 0.37015465558286637,
+        "n_pair": 5
+      },
+      {
+        "case": "pacs",
+        "domain": "photo(域内)",
+        "role": "in",
+        "epoch": 40,
+        "strong_mean": -2.6,
+        "weak_mean": -0.6,
+        "diff": -2.0,
+        "ci95_diff": [
+          -2.88,
+          -1.12
+        ],
+        "p_paired": 0.003198202152335279,
+        "n_pair": 5
+      },
+      {
+        "case": "pacs",
+        "domain": "sketch(域外)",
+        "role": "out",
+        "epoch": 40,
+        "strong_mean": -7.6,
+        "weak_mean": 1.6,
+        "diff": -9.2,
+        "ci95_diff": [
+          -19.49,
+          1.09
+        ],
+        "p_paired": 0.06806812439119224,
+        "n_pair": 5
+      },
+      {
+        "case": "organ",
+        "domain": "axial(域内)",
+        "role": "in",
+        "epoch": 24,
+        "strong_mean": 9.8,
+        "weak_mean": 10.2,
+        "diff": -0.4,
+        "ci95_diff": [
+          -1.08,
+          0.28
+        ],
+        "p_paired": 0.1778078083562211,
+        "n_pair": 5
+      },
+      {
+        "case": "organ",
+        "domain": "coronal(域外)",
+        "role": "out",
+        "epoch": 24,
+        "strong_mean": 18.2,
+        "weak_mean": 17.4,
+        "diff": 0.8,
+        "ci95_diff": [
+          -1.59,
+          3.19
+        ],
+        "p_paired": 0.405023314309061,
+        "n_pair": 5
+      },
+      {
+        "case": "organ",
+        "domain": "sagittal(域外)",
+        "role": "out",
+        "epoch": 24,
+        "strong_mean": -0.4,
+        "weak_mean": -1.0,
+        "diff": 0.6,
+        "ci95_diff": [
+          -1.07,
+          2.27
+        ],
+        "p_paired": 0.3739009663000594,
+        "n_pair": 5
+      },
+      {
+        "case": "digits",
+        "domain": "emnist(域外)",
+        "role": "out",
+        "epoch": 16,
+        "strong_mean": -15.4,
+        "weak_mean": -14.6,
+        "diff": -0.8,
+        "ci95_diff": [
+          -4.01,
+          2.41
+        ],
+        "p_paired": 0.527520645169823,
+        "n_pair": 5
+      },
+      {
+        "case": "digits",
+        "domain": "mnist(域内)",
+        "role": "in",
+        "epoch": 16,
+        "strong_mean": 3.8,
+        "weak_mean": 4.0,
+        "diff": -0.2,
+        "ci95_diff": [
+          -0.76,
+          0.36
+        ],
+        "p_paired": 0.373900966300059,
+        "n_pair": 5
+      },
+      {
+        "case": "digits",
+        "domain": "svhn(域外)",
+        "role": "out",
+        "epoch": 16,
+        "strong_mean": 0.8,
+        "weak_mean": 1.2,
+        "diff": -0.4,
+        "ci95_diff": [
+          -1.51,
+          0.71
+        ],
+        "p_paired": 0.373900966300059,
+        "n_pair": 5
+      }
+    ]
+  },
+  "c2": {
+    "n_obs": 105,
+    "out_always": {
+      "mean": -2.33,
+      "sd": 9.89,
+      "n": 105
+    },
+    "out_never": {
+      "mean": 0.0,
+      "sd": 0.0,
+      "n": 105
+    },
+    "out_rule": {
+      "mean": 0.32,
+      "sd": 6.28,
+      "n": 105
+    },
+    "in_always": {
+      "mean": 4.24,
+      "sd": 4.49,
+      "n": 45
+    },
+    "in_rule": {
+      "mean": 2.13,
+      "sd": 4.12,
+      "n": 45
+    },
+    "per_case": {
+      "pacs": {
+        "always": -6.18,
+        "never": 0.0,
+        "rule": -2.82,
+        "n": 45,
+        "rule_kept": 27
+      },
+      "organ": {
+        "always": 8.2,
+        "never": 0.0,
+        "rule": 5.4,
+        "n": 30,
+        "rule_kept": 15
+      },
+      "digits": {
+        "always": -7.1,
+        "never": 0.0,
+        "rule": -0.03,
+        "n": 30,
+        "rule_kept": 13
+      }
+    }
+  },
+  "c3": {
+    "mmd": {
+      "n": 690,
+      "r_standardized": -0.455,
+      "p_standardized": 1.6992702592463234e-36,
+      "per_case": {
+        "digits": {
+          "n": 150,
+          "r": -0.63,
+          "p": 5.636949788317892e-18,
+          "spearman": -0.786
+        },
+        "organ": {
+          "n": 180,
+          "r": -0.669,
+          "p": 1.051099613108054e-24,
+          "spearman": -0.676
+        },
+        "pacs": {
+          "n": 360,
+          "r": -0.274,
+          "p": 1.2244886800692676e-07,
+          "spearman": -0.559
+        }
+      }
+    },
+    "frechet": {
+      "n": 690,
+      "r_standardized": -0.44,
+      "p_standardized": 5.773195365994709e-34,
+      "per_case": {
+        "digits": {
+          "n": 150,
+          "r": -0.676,
+          "p": 2.209414932260937e-21,
+          "spearman": -0.773
+        },
+        "organ": {
+          "n": 180,
+          "r": -0.504,
+          "p": 5.821874251561218e-13,
+          "spearman": -0.417
+        },
+        "pacs": {
+          "n": 360,
+          "r": -0.309,
+          "p": 2.1036545941638827e-09,
+          "spearman": -0.556
+        }
+      }
+    }
+  }
+}

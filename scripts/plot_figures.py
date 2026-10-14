@@ -187,8 +187,8 @@ def rows_role(A, c, tag, dom):
 
 def fig2_lrdose(A):
     """学习率剂量-反应：横轴为学习率（对数），纵轴为末轮相对基线的精度变化（单栏宽，竖向两块）。"""
-    cases = [c for c in ["pacs", "organ"] if c in A["per_case"]]
-    fig, axes = plt.subplots(len(cases), 1, figsize=(3.19, 2.45 * len(cases)), squeeze=False)
+    cases = [c for c in ["pacs", "organ", "digits"] if c in A["per_case"]]
+    fig, axes = plt.subplots(len(cases), 1, figsize=(3.19, 2.15 * len(cases)), squeeze=False)
     seen = {}
     for k, (ax, c) in enumerate(zip(axes[:, 0], cases)):
         tags = [t for t in TAG_ORDER if t in A["per_case"][c]]
