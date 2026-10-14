@@ -2,12 +2,11 @@
 """按中文核心/SCI 期刊通用规范绘制论文图（中文标注）。
 
 输入：results/analysis.json（由 analyze.py 生成的统计结果）
-输出：figures/fig{1..5}_*.{png,pdf,tif}
-    fig1_overview  各案例在各域上的精度变化总览（热力图）
-    fig2_doseheat  剂量-反应热力图（行为域、列为轮数）
-    fig3_lrdose    学习率剂量-反应（末轮精度变化 vs 学习率）
-    fig4_summary   域内/域外精度变化对比（分组条形）
-    fig5_gap       域外精度变化与特征距离变化的关系（散点 + 拟合）
+输出：figures/fig{1..4}_*.{png,pdf,tif}
+    fig1_doseheat  剂量-反应热力图（行为域、列为轮数）
+    fig2_lrdose    学习率剂量-反应（末轮精度变化 vs 学习率）
+    fig3_summary   域内/域外精度变化对比（分组条形）
+    fig4_gap       域外精度变化与特征距离变化的关系（散点 + 拟合）
 
 制图规范（中文核心/SCI 常见约定）：
   * 拉丁字母与数字用 Times New Roman，中文回退黑体（font.family 列表式回退）
@@ -122,63 +121,12 @@ def dom_key(raw):
 
 
 # --------------------------------------------------------------------------- #
-def fig1_overview(A):
-    """总览热力图：行 = 案例（设置），列 = 域内 + 各目标域。"""
-    strongest = A["strongest"]
-    order = ["pacs|base", "pacs|_strong", "organ|base", "organ|_strong", "digits|base"]
-    keys = [k for k in order if k in strongest]        # 只取弱/强两档，强度全景见图 4
-
-    present = {dom_key(d) for k in keys for d in strongest[k]["out_d_acc_pp"]}
-    cols = ["域内"] + [DOM_SHORT[d] for d in DOM_ORDER if d in present]
-
-    M = np.full((len(keys), len(cols)), np.nan)
-    rows = []
-    for i, k in enumerate(keys):
-        v = strongest[k]
-        rows.append("{}（{}）".format(CASE_ZH.get(v["case"], v["case"]),
-                                     TAG_ZH.get(v["tag"], "微调")))
-        M[i, 0] = v["in_d_acc_pp"]
-        for raw, val in v["out_d_acc_pp"].items():
-            nm = DOM_SHORT.get(dom_key(raw), dom_key(raw))
-            if nm in cols:
-                M[i, cols.index(nm)] = val
-
-    lim = float(np.nanmax(np.abs(M))) or 1.0
-    fig, ax = plt.subplots(figsize=(3.19, 2.55))
-    cmap = plt.get_cmap("RdBu_r").copy()
-    cmap.set_bad("white")
-    im = ax.imshow(np.ma.masked_invalid(M), cmap=cmap, vmin=-lim, vmax=lim, aspect="auto")
-    ax.set_xticks(range(len(cols)))
-    ax.set_xticklabels(cols, rotation=45, ha="right", fontsize=8)
-    ax.set_yticks(range(len(rows)))
-    ax.set_yticklabels(rows, fontsize=8)
-    for i in range(len(rows)):
-        for j in range(len(cols)):
-            if not np.isnan(M[i, j]):
-                ax.text(j, i, "{:+.1f}".format(M[i, j]), ha="center", va="center",
-                        fontsize=7, color="black")
-    ax.set_xticks(np.arange(-0.5, len(cols), 1), minor=True)
-    ax.set_yticks(np.arange(-0.5, len(rows), 1), minor=True)
-    ax.grid(which="minor", color="white", lw=0.8)
-    ax.tick_params(which="minor", bottom=False, left=False)
-    ax.tick_params(which="major", bottom=False, left=False)
-    for s in ax.spines.values():
-        s.set_visible(True)
-        s.set_linewidth(0.8)
-    cb = fig.colorbar(im, ax=ax, fraction=0.045, pad=0.02)
-    cb.set_label("精度变化 / 百分点", fontsize=8)
-    cb.ax.tick_params(labelsize=7.5, width=0.6)
-    cb.outline.set_linewidth(0.6)
-    return save_all(fig, "fig1_overview")
-
-
-# --------------------------------------------------------------------------- #
 def pick_tag(A, c):
     """案例所选设置：有强微调则用强微调，否则用该案例唯一的设置。"""
     return "_strong" if "_strong" in A["per_case"][c] else sorted(A["per_case"][c])[0]
 
 
-def fig2_doseheat(A):
+def fig1_doseheat(A):
     """剂量-反应热力图（案例 × 轮数）：行=域（域内在首行），列=轮数，格内为 Δacc（百分点）。
 
     每个案例取其实验最强设置；发散色标以 0 为中心，红=提升、蓝=下降。
@@ -230,14 +178,14 @@ def fig2_doseheat(A):
     cb.set_label("精度变化 / 百分点", fontsize=8)
     cb.ax.tick_params(labelsize=7.5)
     cb.outline.set_linewidth(0.6)
-    return save_all(fig, "fig2_doseheat")
+    return save_all(fig, "fig1_doseheat")
 
 
 def rows_role(A, c, tag, dom):
     return A["per_case"][c][tag][dom]["role"]
 
 
-def fig3_lrdose(A):
+def fig2_lrdose(A):
     """学习率剂量-反应：横轴为学习率（对数），纵轴为末轮相对基线的精度变化。
 
     同一案例的三档强度使用相同的轮数预算，因此横轴的变化只来自学习率。
@@ -289,10 +237,10 @@ def fig3_lrdose(A):
     fig.legend(handles, labels, loc="lower center", ncol=5, fontsize=7.5,
                frameon=False, bbox_to_anchor=(0.5, -0.05))
     fig.tight_layout(rect=(0, 0.10, 1, 1))
-    return save_all(fig, "fig3_lrdose")
+    return save_all(fig, "fig2_lrdose")
 
 
-def fig4_summary(A):
+def fig3_summary(A):
     """域内/域外精度变化对比：彩色分组条形 + 误差棒（误差棒来自逐种子标准差）。"""
     strongest = A["strongest"]
     order = ["pacs|_strong", "organ|_strong", "digits|base"]
@@ -363,11 +311,11 @@ def fig4_summary(A):
     fig.legend(handles=handles, fontsize=6.8, ncol=4, loc="lower center",
                frameon=False, bbox_to_anchor=(0.5, -0.02))
     fig.tight_layout(rect=(0, 0.26, 1, 1))
-    return save_all(fig, "fig4_summary")
+    return save_all(fig, "fig3_summary")
 
 
 # --------------------------------------------------------------------------- #
-def fig5_gap(A):
+def fig4_gap(A):
     """域外精度变化 vs 特征距离变化。"""
     gv = A["gap_vs_cost"]
     cases = [c for c in ["pacs", "organ", "digits"] if c in A["per_case"]]
@@ -406,18 +354,17 @@ def fig5_gap(A):
             if v.get("pearson_r") is not None)),
         transform=ax.transAxes, ha="right", va="top", fontsize=7.5,
         bbox=dict(boxstyle="round,pad=0.25", facecolor="white", edgecolor="#999999", lw=0.5))
-    return save_all(fig, "fig5_gap")
+    return save_all(fig, "fig4_gap")
 
 
 def main(analysis_path=None, verbose=True):
     setup_style()
     A = json.loads(Path(analysis_path or (RESULTS / "analysis.json")).read_text(encoding="utf-8"))
     made = []
-    made += fig1_overview(A)
-    made += fig2_doseheat(A)
-    made += fig3_lrdose(A)
-    made += fig4_summary(A)
-    made += fig5_gap(A)
+    made += fig1_doseheat(A)
+    made += fig2_lrdose(A)
+    made += fig3_summary(A)
+    made += fig4_gap(A)
     if verbose:
         for p in made:
             print("  figure:", p.name, "{:.0f} KB".format(p.stat().st_size / 1024))

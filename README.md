@@ -26,9 +26,9 @@
 │   ├── dataset_stats.py    统计案例构成 → results/dataset_stats.json
 │   ├── run_experiment.py   核心：微调 + 逐轮跨域评估 + 特征距离诊断
 │   ├── analyze.py          汇总与统计检验 → results/analysis.json + analysis_summary.md
-│   └── plot_figures.py     按期刊规范出图（图 1~图 5；PNG 600 dpi + PDF 矢量 + TIFF）
+│   └── plot_figures.py     按期刊规范出图（图 1~图 4；PNG 600 dpi + PDF 矢量 + TIFF）
 ├── results/                已提交的真实实验结果（CSV/JSON，约 70 KB）
-├── figures/                五张结果图（fig1~fig5）+ 数据抽样确认图
+├── figures/                四张结果图（fig1~fig4）+ 数据抽样确认图
 ├── data/cases/             空目录：npz 案例缓存（约 480 MB，需生成，不随仓库分发）
 ├── requirements.txt
 ├── reproduce.ps1           一键复现
@@ -64,11 +64,10 @@ CPU 也能跑完整流程，只是实验部分会慢很多。
 
 产出：
 - `results/analysis_summary.md`、`results/analysis.json`（全部关键数字与统计量）
-- `figures/fig1_overview.png`（各案例在各域上的精度变化总览，热力图）
-- `figures/fig2_doseheat.png`（剂量-反应热力图：行为域、列为轮数）
-- `figures/fig3_lrdose.png`（学习率剂量-反应：末轮精度变化 vs 学习率）
-- `figures/fig4_summary.png`（域内/域外精度变化对比，分组条形 + 误差棒）
-- `figures/fig5_gap.png`（域外精度变化 vs 特征距离变化，散点 + 拟合）
+- `figures/fig1_doseheat.png`（剂量-反应热力图：行为域、列为轮数）
+- `figures/fig2_lrdose.png`（学习率剂量-反应：末轮精度变化 vs 学习率）
+- `figures/fig3_summary.png`（域内/域外精度变化对比，分组条形 + 误差棒）
+- `figures/fig4_gap.png`（域外精度变化 vs 特征距离变化，散点 + 拟合）
 
 每张图同时导出三种格式：`png`（600 dpi 位图）、`pdf`（矢量，字体以 TrueType 嵌入）、
 `tif`（600 dpi LZW 压缩），便于按期刊要求取用。
@@ -102,7 +101,7 @@ python scripts\analyze.py
 | 字体 | 拉丁字母与数字用 Times New Roman，中文自动回退黑体（`font.family` 列表式逐字回退） |
 | 坐标轴 | 四边闭合、刻度朝内、开启次刻度；不使用网格线 |
 | 误差 | 误差棒为 ±1 标准差（3 个随机种子）；不叠加阴影带 |
-| 配色 | **全部图均为彩色**，采用色盲友好的 Okabe-Ito 配色：图 2/图 3/图 4 的颜色表示“域”（域内统一黑色作参照，每个目标域一种颜色 + 一种标记）；图 5 的颜色表示“案例”；图 1、图 2 为红-蓝发散色标（每格标注数值） |
+| 配色 | **全部图均为彩色**，采用色盲友好的 Okabe-Ito 配色：图 1/图 2/图 3 的颜色表示“域”（域内统一黑色作参照，每个目标域一种颜色 + 一种标记）；图 4 的颜色表示“案例”；图 1 同时使用红-蓝发散色标并逐格标注数值 |
 | 线型 | 实线＝强微调、虚线＝弱微调；域身份同时由颜色/灰度与标记形状编码 |
 | 子图 | 用 (a)(b)(c) 统一编号；同一图内共享一个图例 |
 | 尺寸 | 单栏图约 8.9 cm、双栏图约 17.5 cm，字号按最终印刷尺寸设定（缩放后仍 ≥7 pt） |
