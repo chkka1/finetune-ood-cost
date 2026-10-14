@@ -55,6 +55,11 @@ def load():
         raise SystemExit("results/ 下没有可用结果")
     df = pd.concat(frames, ignore_index=True)
     df["tag"] = df["file"].str.extract(r"_s\d+(?P<tag>.*)$")["tag"]
+    # 只保留主序列，避免架构/分辨率对照实验混入论文数字
+    _n0 = len(df)
+    df = df[(df["backbone"] == MAIN_BACKBONE) & (df["size"] == MAIN_SIZE)].copy()
+    if len(df) != _n0:
+        print("  跳过非主序列结果 %d 行（backbone/size 对照实验）" % (_n0 - len(df)))
     for col in ("case", "backbone", "size", "tag", "domain", "role"):
         df[col] = df[col].fillna("").astype(str)
     return df

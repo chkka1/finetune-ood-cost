@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""配对跨域微调实验：测量域内/域外精度变化与特征距离（PACS / Organ / Digits）。
+"""微调的域内收益 vs 域外代价：配对实验（PACS / Organ / Digits）。
 
 核心协议（保证域内与域外可比，避免"不同口径相减"）：
   1. 只在源域训练集（splits==0）上微调主干；微调期间挂线性分类头，评估时丢弃。
@@ -85,6 +85,10 @@ def build_backbone(name: str, n_classes: int):
     elif name == "efficientnet_b0":
         m = torchvision.models.efficientnet_b0(weights=torchvision.models.EfficientNet_B0_Weights.IMAGENET1K_V1)
         m.classifier = nn.Identity(); dim = 1280
+    elif name == "vit_b_16":
+        # ViT-B/16 的位置编码按 224×224（14×14 patch）预训练，故输入尺寸须为 224
+        m = torchvision.models.vit_b_16(weights=torchvision.models.ViT_B_16_Weights.IMAGENET1K_V1)
+        m.heads = nn.Identity(); dim = 768
     else:
         raise ValueError(name)
     head = nn.Linear(dim, n_classes)

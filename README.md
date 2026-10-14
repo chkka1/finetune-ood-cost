@@ -26,9 +26,14 @@
 │   ├── dataset_stats.py    统计案例构成 → results/dataset_stats.json
 │   ├── run_experiment.py   核心：微调 + 逐轮跨域评估 + 特征距离诊断
 │   ├── analyze.py          汇总与统计检验 → results/analysis.json + analysis_summary.md
-│   └── plot_figures.py     按期刊规范出图（图 1~图 4；PNG 600 dpi + PDF 矢量 + TIFF）
+│   ├── plot_figures.py     按期刊规范出图（图 1~图 4；PNG 600 dpi + PDF 矢量 + TIFF）
+│   ├── extra_stats.py      补充统计：置信区间与配对检验、判据离线验证、诊断量对比
+│   ├── theory_fit.py       距离-代价模型拟合（表 5）
+│   ├── cross_case_model.py 跨案例检验：无量纲剂量、留一外推（表 6）
+│   ├── make_fig5_scope.py  模型适用范围图（fig5）
+│   └── robustness_check.py 主干架构与输入分辨率对照（表 7）
 ├── results/                已提交的真实实验结果（CSV/JSON，约 70 KB）
-├── figures/                四张结果图（fig1~fig4）+ 数据抽样确认图
+├── figures/                五张结果图（fig1~fig5，PNG）+ 数据抽样确认图
 ├── data/cases/             空目录：npz 案例缓存（约 480 MB，需生成，不随仓库分发）
 ├── requirements.txt
 ├── reproduce.ps1           一键复现
