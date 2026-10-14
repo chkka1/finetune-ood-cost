@@ -26,7 +26,9 @@ SEEDS = (0, 1, 2)
 OUT_DOMAINS = ("art_painting", "cartoon", "sketch")
 CONFIGS = [("ResNet-18@128", "pacs_resnet18_s128.csv"),
            ("ResNet-18@224", "pacs_resnet18_s224_r224.csv"),
-           ("ViT-B/16@224", "pacs_vit_b_16_s224_v224.csv")]
+           ("ResNet-18@224b16", "pacs_resnet18_s224_r224b16.csv"),
+           ("ViT-B/16@224b16", "pacs_vit_b_16_s224_v224.csv"),
+           ("ViT-B/16@224lr4", "pacs_vit_b_16_s224_v224lr4.csv")]
 
 
 def zk(v):

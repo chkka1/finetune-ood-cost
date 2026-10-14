@@ -67,23 +67,29 @@ if ($Full) {
         @("--seeds") + $S5 + @("--batch", "128", "--lr", "1e-4", "--max-train", "12000", "--tag", "_lr1e4")
 
     # ---- 稳健性对照：分辨率与主干（PACS，弱微调 16 轮 × 3 种子）----
-    Invoke-Step "12 分辨率对照 ResNet-18@224" @("$root\scripts\run_experiment.py",
+    Invoke-Step "12 分辨率对照 ResNet-18@224（b32）" @("$root\scripts\run_experiment.py",
         "--case", "pacs", "--size", "224", "--backbone", "resnet18", "--epochs", "16",
         "--eval-epochs") + $E16 + @("--seeds") + $S3 + @("--lr", "3e-4", "--batch", "32", "--tag", "_r224")
-    Invoke-Step "13 架构对照 ViT-B/16@224" @("$root\scripts\run_experiment.py",
+    Invoke-Step "13 批大小对照 ResNet-18@224（b16）" @("$root\scripts\run_experiment.py",
+        "--case", "pacs", "--size", "224", "--backbone", "resnet18", "--epochs", "16",
+        "--eval-epochs") + $E16 + @("--seeds") + $S3 + @("--lr", "3e-4", "--batch", "16", "--tag", "_r224b16")
+    Invoke-Step "14 架构对照 ViT-B/16@224（lr=3e-4, b16）" @("$root\scripts\run_experiment.py",
         "--case", "pacs", "--size", "224", "--backbone", "vit_b_16", "--epochs", "16",
         "--eval-epochs") + $E16 + @("--seeds") + $S3 + @("--lr", "3e-4", "--batch", "16", "--tag", "_v224")
+    Invoke-Step "15 学习率对照 ViT-B/16@224（lr=1e-4, b32）" @("$root\scripts\run_experiment.py",
+        "--case", "pacs", "--size", "224", "--backbone", "vit_b_16", "--epochs", "16",
+        "--eval-epochs") + $E16 + @("--seeds") + $S3 + @("--lr", "1e-4", "--batch", "32", "--tag", "_v224lr4")
 } else {
     Write-Host "快速模式：使用已提交的 results/ 离线重算（不下载数据、不训练）" -ForegroundColor Yellow
 }
 
 # ---- 分析与出图（全部离线，仅依赖 results/*.csv）----
-Invoke-Step "14 汇总统计与主图（fig1~fig4）" @("$root\scripts\analyze.py")
-Invoke-Step "15 补充统计：置信区间、配对检验、判据离线验证" @("$root\scripts\extra_stats.py")
-Invoke-Step "16 距离-代价模型拟合（表 5）" @("$root\scripts\theory_fit.py")
-Invoke-Step "17 跨案例检验：无量纲剂量、留一外推（表 6）" @("$root\scripts\cross_case_model.py")
-Invoke-Step "18 模型适用范围图（fig5）" @("$root\scripts\make_fig5_scope.py")
-Invoke-Step "19 架构与分辨率对照（表 7）" @("$root\scripts\robustness_check.py")
+Invoke-Step "16 汇总统计与主图（fig1~fig4）" @("$root\scripts\analyze.py")
+Invoke-Step "17 补充统计：置信区间、配对检验、判据离线验证" @("$root\scripts\extra_stats.py")
+Invoke-Step "18 距离-代价模型拟合（表 5）" @("$root\scripts\theory_fit.py")
+Invoke-Step "19 跨案例检验：无量纲剂量、留一外推（表 6）" @("$root\scripts\cross_case_model.py")
+Invoke-Step "20 模型适用范围图（fig5）" @("$root\scripts\make_fig5_scope.py")
+Invoke-Step "21 架构与分辨率对照（表 7）" @("$root\scripts\robustness_check.py")
 
 Write-Host "`n完成。产出：" -ForegroundColor Green
 Write-Host "  $root\figures\fig1_doseheat / fig2_lrdose / fig3_summary / fig4_gap / fig5_scope（png+pdf+tif）"
